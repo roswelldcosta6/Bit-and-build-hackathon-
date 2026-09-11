@@ -1,0 +1,18 @@
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local runtime artifacts
+temp_audio/
+
+# Tests and tooling (not needed inside the runtime image)
+tests/
+.pytest_cache
+pytest.ini

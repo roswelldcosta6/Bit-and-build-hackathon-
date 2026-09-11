@@ -133,3 +133,43 @@ def test_speech_to_isl_upload():
     assert "glosses" in data
     assert "animation_sequence" in data
     assert len(data["animation_sequence"]) > 0
+
+
+def test_predict_empty_keypoints_returns_400():
+    response = client.post("/predict", json={"keypoints": []})
+    assert response.status_code == 400
+
+
+def test_bigram_phrases_map_to_single_gloss():
+    result = text_to_isl_gloss("Thank you doctor")
+    assert result["glosses"][0] == "THANK_YOU"  # bigram 'thank you' -> one sign
+    assert "YOU" not in result["glosses"]
+    assert "DOCTOR" in result["glosses"]
+
+
+def test_please_is_kept_as_sign():
+    result = text_to_isl_gloss("Water please")
+    assert "PLEASE" in result["glosses"]  # PLEASE has its own sign, must not be dropped
+    assert "WATER" in result["glosses"]
+
+
+def test_stt_sanitizes_unsafe_filename():
+    from whisper_stt import transcribe_audio_bytes
+
+    backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    result = transcribe_audio_bytes(b"RIFF....", filename="../../evil.exe")
+    # Must still return a result (mock mode) without writing outside temp_audio/
+    assert "text" in result
+    assert not os.path.exists(os.path.join(backend_dir, "evil.exe"))
+    temp_audio_dir = os.path.join(backend_dir, "temp_audio")
+    if os.path.exists(temp_audio_dir):
+        leftovers = [f for f in os.listdir(temp_audio_dir) if "evil" in f]
+        assert leftovers == []
+
+
+def test_stt_empty_audio_returns_empty_text():
+    from whisper_stt import transcribe_audio_bytes
+
+    result = transcribe_audio_bytes(b"")
+    assert result["text"] == ""
+    assert result["confidence"] == 0.0

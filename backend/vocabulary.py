@@ -203,6 +203,7 @@ SYNONYM_MAP: Dict[str, str] = {
     "how": "HOW",
     "who": "WHO", "whom": "WHO",
     "much": "HOW_MUCH", "many": "HOW_MUCH", "price": "HOW_MUCH", "cost": "HOW_MUCH",
+    "how much": "HOW_MUCH", "how many": "HOW_MUCH",
     
     # Verbs
     "want": "WANT", "need": "WANT", "require": "WANT", "wish": "WANT", "demand": "WANT",
@@ -217,6 +218,7 @@ SYNONYM_MAP: Dict[str, str] = {
     # Greetings
     "hello": "HELLO", "hi": "HELLO", "namaste": "HELLO", "hey": "HELLO", "greetings": "HELLO",
     "thank": "THANK_YOU", "thanks": "THANK_YOU",
+    "thank you": "THANK_YOU", "thank-you": "THANK_YOU",
     "please": "PLEASE", "kindly": "PLEASE",
     "sorry": "SORRY", "apologize": "SORRY", "excuse": "SORRY",
     "yes": "YES", "yeah": "YES", "yep": "YES", "correct": "YES", "true": "YES",

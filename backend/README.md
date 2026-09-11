@@ -22,6 +22,15 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 Interactive Swagger API docs available immediately at: **`http://localhost:8000/docs`**
 
+> **Note:** Real speech recognition uses OpenAI Whisper. It is an optional heavy
+> dependency (PyTorch ~2GB) and is intentionally **not** in `requirements.txt`.
+> Without it, the server still runs every endpoint — `/speech-to-isl` falls back
+> to a deterministic mock transcript for integration testing. To enable real STT:
+> ```bash
+> pip install -U openai-whisper
+> ```
+> On Windows you can also just double-click `run_server.bat`.
+
 ---
 
 ## 🧪 Run Automated Tests
@@ -148,7 +157,7 @@ curl -X POST "http://localhost:8000/speech-to-isl" \
 
 ---
 
-### 5. Mode A Cloud Fallback Gesture Prediction
+### 6. Mode A Cloud Fallback Gesture Prediction
 - **`POST /predict`**
 - Takes 30 frames x 63 coordinates `[[x1,y1,z1...], ...]` and returns classified sign.
 ```json
@@ -163,7 +172,7 @@ curl -X POST "http://localhost:8000/speech-to-isl" \
 
 ---
 
-### 6. Session History
+### 7. Session History
 - **`GET /history/{session_id}`** — Retrieve past translations
 - **`POST /history`** — Manually record a translated item
 

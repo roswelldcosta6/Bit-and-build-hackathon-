@@ -27,14 +27,14 @@ ENGLISH_DROPS = {
     "a", "an", "the", "is", "are", "am", "was", "were", "be", "been", "being",
     "to", "of", "for", "at", "by", "with", "from", "in", "on", "into", "onto",
     "do", "does", "did", "have", "has", "had", "will", "shall", "would", "should",
-    "can", "could", "may", "might", "must", "please"
+    "can", "could", "may", "might", "must"
 }
 
 # Hindi stop words and copulas to drop
 HINDI_DROPS = {
     "है", "हैं", "था", "थी", "थे", "हो", "हूँ", "हुं",
     "का", "के", "की", "को", "में", "से", "पर", "ने", "तक", "द्वारा",
-    "एक", "भी", "तो", "ही", "कृपया"
+    "एक", "भी", "तो", "ही"
 }
 
 

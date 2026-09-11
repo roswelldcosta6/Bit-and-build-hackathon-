@@ -17,3 +17,6 @@ backend/temp_audio/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Freebuff workspace metadata
+.freebuff/

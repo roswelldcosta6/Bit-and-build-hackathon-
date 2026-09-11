@@ -5,8 +5,10 @@ Supports OpenAI Whisper with graceful fallback for offline / mock testing.
 """
 
 import os
+import re
+import uuid
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 logger = logging.getLogger("signbridge.stt")
 
@@ -44,10 +46,15 @@ def transcribe_audio_bytes(audio_bytes: bytes, filename: str = "input.wav") -> D
     if not audio_bytes:
         return {"text": "", "lang": "en", "confidence": 0.0}
 
-    # Save to a temporary file
+    # Save to a unique temporary file.
+    # Never trust the client-supplied filename directly (path traversal / collisions):
+    # keep only a sane audio extension and generate a unique name per request.
     temp_dir = os.path.join(os.path.dirname(__file__), "temp_audio")
     os.makedirs(temp_dir, exist_ok=True)
-    temp_path = os.path.join(temp_dir, f"temp_{os.getpid()}_{filename}")
+    safe_ext = os.path.splitext(filename)[1].lower()
+    if not re.fullmatch(r"\.(wav|mp3|m4a|ogg|flac|webm|aac)", safe_ext):
+        safe_ext = ".wav"
+    temp_path = os.path.join(temp_dir, f"temp_{os.getpid()}_{uuid.uuid4().hex}{safe_ext}")
 
     try:
         with open(temp_path, "wb") as f:

@@ -132,7 +132,9 @@ def generate_skeletal_animation(gloss: str, fps: int = 30) -> Dict[str, Any]:
     }
 
     duration_ms = meta.get("duration_ms", 1300)
-    total_frames = int((duration_ms / 1000.0) * fps)
+    # Ensure at least 24 frames (transition-in + hold + transition-out) so the
+    # return-phase divisor below can never hit zero for very short durations.
+    total_frames = max(int((duration_ms / 1000.0) * fps), 24)
     peak_target = get_target_sign_pose(gloss)
 
     frames = []
@@ -152,7 +154,8 @@ def generate_skeletal_animation(gloss: str, fps: int = 30) -> Dict[str, Any]:
             current_target = {k: [v[0], v[1] + flutter, v[2]] for k, v in peak_target.items()}
             start = REST_JOINTS
         else:
-            t = (total_frames - 1 - f) / float(total_frames - 22)
+            # Guard against a zero denominator if total_frames ever equals the hold window.
+            t = (total_frames - 1 - f) / float(max(total_frames - 22, 1))
             current_target = peak_target
             start = REST_JOINTS
 

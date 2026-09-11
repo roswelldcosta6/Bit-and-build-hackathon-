@@ -4,14 +4,13 @@ Author: Person 3 (Backend + NLP Engineer)
 Framework: FastAPI
 """
 
-import time
 import uuid
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import HTMLResponse
 
 from models.schemas import (
     HealthResponse,
@@ -40,11 +39,14 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Enable CORS for Flutter Mobile, Web, and Desktop Clients
+# Enable CORS for Flutter Mobile, Web, and Desktop Clients.
+# Note: wildcard origins cannot be combined with allow_credentials=True (the
+# browser rejects such responses per the CORS spec), so credentials stay off.
+# The app authenticates nothing today; tighten origins before adding auth.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -190,13 +192,12 @@ def predict_gesture(payload: PredictRequest):
             detail="Keypoints buffer cannot be empty",
         )
 
-    # Heuristic & mock fallback classifier for demonstration
-    # In production, this loads Person 1's model weights
-    sample_first = frames[0] if len(frames) > 0 else []
-    
-    # Calculate simple variance across frames to simulate dynamic gesture recognition
-    avg_val = sum(sample_first) / len(sample_first) if sample_first else 0.5
-    
+    # Heuristic & mock fallback classifier for demonstration.
+    # In production this endpoint loads Person 1's exported model.tflite and
+    # runs the same inference the app performs on-device.
+    flat_values = [v for frame in frames for v in frame if isinstance(v, (int, float))]
+    avg_val = sum(flat_values) / len(flat_values) if flat_values else 0.5
+
     if avg_val > 0.6:
         label = "HELP"
     elif avg_val > 0.4:
