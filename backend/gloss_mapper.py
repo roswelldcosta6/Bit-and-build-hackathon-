@@ -195,18 +195,41 @@ def text_to_isl_gloss(text: str, explicit_lang: Optional[str] = None) -> Dict[st
     clip_ids = []
     video_filenames = []
     subtitle_parts = []
+    animation_sequence = []
+    total_duration_ms = 0
 
     for gloss in reordered_glosses:
         meta = get_sign_metadata(gloss)
         if meta:
             clip_ids.append(meta["clip_id"])
             video_filenames.append(meta["video_file"])
-            # Format title case for subtitle
             subtitle_parts.append(meta["en"])
+            
+            dur = meta.get("duration_ms", 1300)
+            total_duration_ms += dur
+            animation_sequence.append({
+                "gloss": gloss,
+                "animation_trigger": meta.get("animation_trigger", f"sign_{gloss.lower()}"),
+                "duration_ms": dur,
+                "blend_transition_ms": 250,
+                "hand_target": meta.get("hand_target", "BOTH_HANDS"),
+                "facial_expression": meta.get("facial_expression", "NEUTRAL"),
+                "pose_endpoint": f"/avatar/poses/{gloss}",
+            })
         else:
             clip_ids.append(1)
             video_filenames.append("HELP.mp4")
             subtitle_parts.append(gloss.capitalize())
+            total_duration_ms += 1200
+            animation_sequence.append({
+                "gloss": gloss,
+                "animation_trigger": f"sign_{gloss.lower()}",
+                "duration_ms": 1200,
+                "blend_transition_ms": 250,
+                "hand_target": "BOTH_HANDS",
+                "facial_expression": "NEUTRAL",
+                "pose_endpoint": f"/avatar/poses/{gloss}",
+            })
 
     subtitle = " ".join(subtitle_parts)
 
@@ -214,6 +237,8 @@ def text_to_isl_gloss(text: str, explicit_lang: Optional[str] = None) -> Dict[st
         "original_text": text,
         "detected_lang": lang,
         "glosses": reordered_glosses,
+        "animation_sequence": animation_sequence,
+        "total_duration_ms": total_duration_ms,
         "clip_ids": clip_ids,
         "video_filenames": video_filenames,
         "subtitle": subtitle,

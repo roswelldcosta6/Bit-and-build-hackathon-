@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 
 from models.schemas import (
     HealthResponse,
@@ -23,10 +23,13 @@ from models.schemas import (
     HistoryListResponse,
     VocabularyItem,
     VocabularyResponse,
+    SkeletalPoseResponse,
+    AvatarAnimationAction,
 )
 from vocabulary import get_all_vocabulary, get_sign_metadata
 from gloss_mapper import text_to_isl_gloss
 from whisper_stt import transcribe_audio_bytes
+from avatar_engine import generate_skeletal_animation, get_avatar_web_preview_html
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -74,6 +77,21 @@ def get_vocabulary():
         categories=categories,
         vocabulary=vocab_items,
     )
+
+
+@app.get("/avatar-preview", response_class=HTMLResponse, tags=["3D Humanoid Avatar"])
+def avatar_preview_page():
+    """Interactive 3D WebGL Humanoid Avatar live interactive preview."""
+    return HTMLResponse(content=get_avatar_web_preview_html(), status_code=200)
+
+
+@app.get("/avatar/poses/{gloss}", response_model=SkeletalPoseResponse, tags=["3D Humanoid Avatar"])
+def get_avatar_poses(gloss: str):
+    """
+    Returns 30 FPS 3D skeletal joint trajectories for animating the humanoid avatar rig.
+    Provides coordinates for head, shoulders, elbows, wrists, and finger joints.
+    """
+    return generate_skeletal_animation(gloss.upper())
 
 
 @app.post("/text-to-isl", response_model=ISLGlossResponse, tags=["Mode B: Speak/Text -> Sign"])

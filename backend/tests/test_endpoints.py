@@ -86,3 +86,36 @@ def test_history_flow():
     assert hist_data["session_id"] == "test-session-123"
     assert hist_data["count"] >= 1
     assert "DOCTOR" in hist_data["items"][0]["glosses"]
+
+
+def test_avatar_preview():
+    response = client.get("/avatar-preview")
+    assert response.status_code == 200
+    assert "Three.js" in response.text
+    assert "SignBridge Humanoid" in response.text
+
+
+def test_avatar_poses():
+    response = client.get("/avatar/poses/DOCTOR")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["gloss"] == "DOCTOR"
+    assert data["fps"] == 30
+    assert data["frame_count"] > 0
+    first_frame = data["frames"][0]
+    assert "joints" in first_frame
+    assert "right_wrist" in first_frame["joints"]
+    assert len(first_frame["joints"]["right_wrist"]) == 3  # [x, y, z]
+
+
+def test_text_to_isl_humanoid_animation_sequence():
+    response = client.post("/text-to-isl", json={"text": "Where is the hospital?"})
+    assert response.status_code == 200
+    data = response.json()
+    assert "animation_sequence" in data
+    assert len(data["animation_sequence"]) == len(data["glosses"])
+    first_action = data["animation_sequence"][0]
+    assert first_action["gloss"] == "HOSPITAL"
+    assert "animation_trigger" in first_action
+    assert first_action["duration_ms"] > 0
+    assert "/avatar/poses/HOSPITAL" in first_action["pose_endpoint"]

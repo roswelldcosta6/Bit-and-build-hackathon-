@@ -78,9 +78,17 @@ pytest tests/test_endpoints.py -v
 
 ---
 
-### 3. Text to ISL Gloss Mapping (Mode B)
+### 3. 3D Humanoid Avatar Endpoints & Visualizer (Mode B)
+- **`GET /avatar-preview`**
+  - **Interactive 3D WebGL Humanoid Avatar Visualizer**. Open in any browser to watch the 3D humanoid character animate hand, arm, and finger gestures in real-time.
+- **`GET /avatar/poses/{gloss}`**
+  - Returns 30 FPS sequential 3D skeletal coordinates `(x, y, z)` for shoulders, elbows, wrists, and hand joints for Person 4's 3D humanoid character rig.
+
+---
+
+### 4. Text to ISL Humanoid Gloss Mapping (Mode B)
 - **`POST /text-to-isl`**
-- Translates plain English or Hindi text into ISL SOV glosses and animation sequence clip IDs.
+- Translates plain English or Hindi text into ISL SOV glosses and sequential 3D humanoid animation actions.
 
 **Request:**
 ```bash
@@ -98,14 +106,27 @@ curl -X POST "http://localhost:8000/text-to-isl" \
     "HOSPITAL",
     "WHERE"
   ],
-  "clip_ids": [
-    3,
-    33
+  "animation_sequence": [
+    {
+      "gloss": "HOSPITAL",
+      "animation_trigger": "sign_hospital",
+      "duration_ms": 1500,
+      "blend_transition_ms": 250,
+      "hand_target": "BOTH_HANDS",
+      "facial_expression": "NEUTRAL",
+      "pose_endpoint": "/avatar/poses/HOSPITAL"
+    },
+    {
+      "gloss": "WHERE",
+      "animation_trigger": "sign_where",
+      "duration_ms": 1400,
+      "blend_transition_ms": 250,
+      "hand_target": "BOTH_HANDS",
+      "facial_expression": "QUESTIONING",
+      "pose_endpoint": "/avatar/poses/WHERE"
+    }
   ],
-  "video_filenames": [
-    "HOSPITAL.mp4",
-    "WHERE.mp4"
-  ],
+  "total_duration_ms": 2900,
   "subtitle": "Hospital Where",
   "grammar_applied": [
     "WH_QUESTION_FINAL"
@@ -115,9 +136,9 @@ curl -X POST "http://localhost:8000/text-to-isl" \
 
 ---
 
-### 4. Speech to ISL Gloss Mapping (Mode B)
+### 5. Speech to ISL Humanoid Mapping (Mode B)
 - **`POST /speech-to-isl`**
-- Ingests audio recording (`multipart/form-data`), transcribes via Whisper (auto-detects Hindi or English), and returns the sequential ISL gloss animation manifest.
+- Ingests audio recording (`multipart/form-data`), transcribes via Whisper (auto-detects Hindi or English), and returns the sequential 3D humanoid animation manifest.
 
 **Request:**
 ```bash

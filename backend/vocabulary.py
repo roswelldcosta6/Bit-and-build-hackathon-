@@ -1,90 +1,152 @@
 """
 SignBridge ISL Vocabulary Registry
 Comprehensive mapping for 60+ core Indian Sign Language signs.
-Includes emergency, healthcare, banking, educational, and daily conversational vocabulary.
+Includes humanoid 3D animation triggers, skeletal rig targets, and facial expressions.
 """
 
 from typing import Dict, Any, List, Optional
 
-# Master Vocabulary List
+# Master Vocabulary with 3D Humanoid Avatar metadata
 ISL_VOCABULARY: List[Dict[str, Any]] = [
     # 1. Emergency & Medical (Critical for Hospitals)
-    {"clip_id": 1, "gloss": "HELP", "en": "Help", "hi": "मदद", "category": "Emergency", "video_file": "HELP.mp4"},
-    {"clip_id": 2, "gloss": "DOCTOR", "en": "Doctor", "hi": "डॉक्टर", "category": "Hospital", "video_file": "DOCTOR.mp4"},
-    {"clip_id": 3, "gloss": "HOSPITAL", "en": "Hospital", "hi": "अस्पताल", "category": "Hospital", "video_file": "HOSPITAL.mp4"},
-    {"clip_id": 4, "gloss": "PAIN", "en": "Pain", "hi": "दर्द", "category": "Hospital", "video_file": "PAIN.mp4"},
-    {"clip_id": 5, "gloss": "MEDICINE", "en": "Medicine", "hi": "दवा", "category": "Hospital", "video_file": "MEDICINE.mp4"},
-    {"clip_id": 6, "gloss": "EMERGENCY", "en": "Emergency", "hi": "आपातकाल", "category": "Emergency", "video_file": "EMERGENCY.mp4"},
-    {"clip_id": 7, "gloss": "BLOOD", "en": "Blood", "hi": "खून", "category": "Hospital", "video_file": "BLOOD.mp4"},
-    {"clip_id": 8, "gloss": "NURSE", "en": "Nurse", "hi": "नर्स", "category": "Hospital", "video_file": "NURSE.mp4"},
-    {"clip_id": 9, "gloss": "SICK", "en": "Sick", "hi": "बीमार", "category": "Hospital", "video_file": "SICK.mp4"},
-    {"clip_id": 10, "gloss": "FEVER", "en": "Fever", "hi": "बुखार", "category": "Hospital", "video_file": "FEVER.mp4"},
-    {"clip_id": 11, "gloss": "AMBULANCE", "en": "Ambulance", "hi": "एम्बुलेंस", "category": "Emergency", "video_file": "AMBULANCE.mp4"},
+    {"clip_id": 1, "gloss": "HELP", "en": "Help", "hi": "मदद", "category": "Emergency", "video_file": "HELP.mp4",
+     "animation_trigger": "sign_help", "hand_target": "BOTH_HANDS", "facial_expression": "CONCERNED", "duration_ms": 1400},
+    {"clip_id": 2, "gloss": "DOCTOR", "en": "Doctor", "hi": "डॉक्टर", "category": "Hospital", "video_file": "DOCTOR.mp4",
+     "animation_trigger": "sign_doctor", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 3, "gloss": "HOSPITAL", "en": "Hospital", "hi": "अस्पताल", "category": "Hospital", "video_file": "HOSPITAL.mp4",
+     "animation_trigger": "sign_hospital", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1500},
+    {"clip_id": 4, "gloss": "PAIN", "en": "Pain", "hi": "दर्द", "category": "Hospital", "video_file": "PAIN.mp4",
+     "animation_trigger": "sign_pain", "hand_target": "BOTH_HANDS", "facial_expression": "CONCERNED", "duration_ms": 1300},
+    {"clip_id": 5, "gloss": "MEDICINE", "en": "Medicine", "hi": "दवा", "category": "Hospital", "video_file": "MEDICINE.mp4",
+     "animation_trigger": "sign_medicine", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 6, "gloss": "EMERGENCY", "en": "Emergency", "hi": "आपातकाल", "category": "Emergency", "video_file": "EMERGENCY.mp4",
+     "animation_trigger": "sign_emergency", "hand_target": "BOTH_HANDS", "facial_expression": "CONCERNED", "duration_ms": 1500},
+    {"clip_id": 7, "gloss": "BLOOD", "en": "Blood", "hi": "खून", "category": "Hospital", "video_file": "BLOOD.mp4",
+     "animation_trigger": "sign_blood", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 8, "gloss": "NURSE", "en": "Nurse", "hi": "नर्स", "category": "Hospital", "video_file": "NURSE.mp4",
+     "animation_trigger": "sign_nurse", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 9, "gloss": "SICK", "en": "Sick", "hi": "बीमार", "category": "Hospital", "video_file": "SICK.mp4",
+     "animation_trigger": "sign_sick", "hand_target": "RIGHT_HAND", "facial_expression": "CONCERNED", "duration_ms": 1400},
+    {"clip_id": 10, "gloss": "FEVER", "en": "Fever", "hi": "बुखार", "category": "Hospital", "video_file": "FEVER.mp4",
+     "animation_trigger": "sign_fever", "hand_target": "RIGHT_HAND", "facial_expression": "CONCERNED", "duration_ms": 1300},
+    {"clip_id": 11, "gloss": "AMBULANCE", "en": "Ambulance", "hi": "एम्बुलेंस", "category": "Emergency", "video_file": "AMBULANCE.mp4",
+     "animation_trigger": "sign_ambulance", "hand_target": "BOTH_HANDS", "facial_expression": "CONCERNED", "duration_ms": 1600},
 
     # 2. Banking & Administration
-    {"clip_id": 12, "gloss": "BANK", "en": "Bank", "hi": "बैंक", "category": "Banking", "video_file": "BANK.mp4"},
-    {"clip_id": 13, "gloss": "MONEY", "en": "Money", "hi": "पैसे", "category": "Banking", "video_file": "MONEY.mp4"},
-    {"clip_id": 14, "gloss": "ACCOUNT", "en": "Account", "hi": "खाता", "category": "Banking", "video_file": "ACCOUNT.mp4"},
-    {"clip_id": 15, "gloss": "DEPOSIT", "en": "Deposit", "hi": "जमा", "category": "Banking", "video_file": "DEPOSIT.mp4"},
-    {"clip_id": 16, "gloss": "WITHDRAW", "en": "Withdraw", "hi": "निकालना", "category": "Banking", "video_file": "WITHDRAW.mp4"},
-    {"clip_id": 17, "gloss": "SIGN", "en": "Sign / Signature", "hi": "हस्ताक्षर", "category": "Banking", "video_file": "SIGN.mp4"},
-    {"clip_id": 18, "gloss": "CARD", "en": "Card", "hi": "कार्ड", "category": "Banking", "video_file": "CARD.mp4"},
-    {"clip_id": 19, "gloss": "LOAN", "en": "Loan", "hi": "ऋण", "category": "Banking", "video_file": "LOAN.mp4"},
+    {"clip_id": 12, "gloss": "BANK", "en": "Bank", "hi": "बैंक", "category": "Banking", "video_file": "BANK.mp4",
+     "animation_trigger": "sign_bank", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1400},
+    {"clip_id": 13, "gloss": "MONEY", "en": "Money", "hi": "पैसे", "category": "Banking", "video_file": "MONEY.mp4",
+     "animation_trigger": "sign_money", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 14, "gloss": "ACCOUNT", "en": "Account", "hi": "खाता", "category": "Banking", "video_file": "ACCOUNT.mp4",
+     "animation_trigger": "sign_account", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 15, "gloss": "DEPOSIT", "en": "Deposit", "hi": "जमा", "category": "Banking", "video_file": "DEPOSIT.mp4",
+     "animation_trigger": "sign_deposit", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 16, "gloss": "WITHDRAW", "en": "Withdraw", "hi": "निकालना", "category": "Banking", "video_file": "WITHDRAW.mp4",
+     "animation_trigger": "sign_withdraw", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 17, "gloss": "SIGN", "en": "Sign / Signature", "hi": "हस्ताक्षर", "category": "Banking", "video_file": "SIGN.mp4",
+     "animation_trigger": "sign_signature", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1400},
+    {"clip_id": 18, "gloss": "CARD", "en": "Card", "hi": "कार्ड", "category": "Banking", "video_file": "CARD.mp4",
+     "animation_trigger": "sign_card", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 19, "gloss": "LOAN", "en": "Loan", "hi": "ऋण", "category": "Banking", "video_file": "LOAN.mp4",
+     "animation_trigger": "sign_loan", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1300},
 
     # 3. Essential Needs & Items
-    {"clip_id": 20, "gloss": "WATER", "en": "Water", "hi": "पानी", "category": "Needs", "video_file": "WATER.mp4"},
-    {"clip_id": 21, "gloss": "FOOD", "en": "Food", "hi": "खाना", "category": "Needs", "video_file": "FOOD.mp4"},
-    {"clip_id": 22, "gloss": "TOILET", "en": "Washroom / Toilet", "hi": "शौचालय", "category": "Needs", "video_file": "TOILET.mp4"},
-    {"clip_id": 23, "gloss": "SLEEP", "en": "Sleep", "hi": "सोना", "category": "Needs", "video_file": "SLEEP.mp4"},
-    {"clip_id": 24, "gloss": "PHONE", "en": "Phone", "hi": "फोन", "category": "Needs", "video_file": "PHONE.mp4"},
+    {"clip_id": 20, "gloss": "WATER", "en": "Water", "hi": "पानी", "category": "Needs", "video_file": "WATER.mp4",
+     "animation_trigger": "sign_water", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 21, "gloss": "FOOD", "en": "Food", "hi": "खाना", "category": "Needs", "video_file": "FOOD.mp4",
+     "animation_trigger": "sign_food", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 22, "gloss": "TOILET", "en": "Washroom / Toilet", "hi": "शौचालय", "category": "Needs", "video_file": "TOILET.mp4",
+     "animation_trigger": "sign_toilet", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 23, "gloss": "SLEEP", "en": "Sleep", "hi": "सोना", "category": "Needs", "video_file": "SLEEP.mp4",
+     "animation_trigger": "sign_sleep", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1400},
+    {"clip_id": 24, "gloss": "PHONE", "en": "Phone", "hi": "फोन", "category": "Needs", "video_file": "PHONE.mp4",
+     "animation_trigger": "sign_phone", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1300},
 
     # 4. People & Pronouns
-    {"clip_id": 25, "gloss": "ME", "en": "I / Me", "hi": "मैं / मुझे", "category": "Pronouns", "video_file": "ME.mp4"},
-    {"clip_id": 26, "gloss": "YOU", "en": "You", "hi": "आप / तुम", "category": "Pronouns", "video_file": "YOU.mp4"},
-    {"clip_id": 27, "gloss": "WE", "en": "We", "hi": "हम", "category": "Pronouns", "video_file": "WE.mp4"},
-    {"clip_id": 28, "gloss": "HE_SHE", "en": "He / She", "hi": "वह", "category": "Pronouns", "video_file": "HE_SHE.mp4"},
-    {"clip_id": 29, "gloss": "FAMILY", "en": "Family", "hi": "परिवार", "category": "People", "video_file": "FAMILY.mp4"},
-    {"clip_id": 30, "gloss": "MOTHER", "en": "Mother", "hi": "माँ", "category": "People", "video_file": "MOTHER.mp4"},
-    {"clip_id": 31, "gloss": "FATHER", "en": "Father", "hi": "पिता", "category": "People", "video_file": "FATHER.mp4"},
-    {"clip_id": 32, "gloss": "CHILD", "en": "Child", "hi": "बच्चा", "category": "People", "video_file": "CHILD.mp4"},
+    {"clip_id": 25, "gloss": "ME", "en": "I / Me", "hi": "मैं / मुझे", "category": "Pronouns", "video_file": "ME.mp4",
+     "animation_trigger": "sign_me", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1100},
+    {"clip_id": 26, "gloss": "YOU", "en": "You", "hi": "आप / तुम", "category": "Pronouns", "video_file": "YOU.mp4",
+     "animation_trigger": "sign_you", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1100},
+    {"clip_id": 27, "gloss": "WE", "en": "We", "hi": "हम", "category": "Pronouns", "video_file": "WE.mp4",
+     "animation_trigger": "sign_we", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 28, "gloss": "HE_SHE", "en": "He / She", "hi": "वह", "category": "Pronouns", "video_file": "HE_SHE.mp4",
+     "animation_trigger": "sign_heshe", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1100},
+    {"clip_id": 29, "gloss": "FAMILY", "en": "Family", "hi": "परिवार", "category": "People", "video_file": "FAMILY.mp4",
+     "animation_trigger": "sign_family", "hand_target": "BOTH_HANDS", "facial_expression": "SMILE", "duration_ms": 1400},
+    {"clip_id": 30, "gloss": "MOTHER", "en": "Mother", "hi": "माँ", "category": "People", "video_file": "MOTHER.mp4",
+     "animation_trigger": "sign_mother", "hand_target": "RIGHT_HAND", "facial_expression": "SMILE", "duration_ms": 1300},
+    {"clip_id": 31, "gloss": "FATHER", "en": "Father", "hi": "पिता", "category": "People", "video_file": "FATHER.mp4",
+     "animation_trigger": "sign_father", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 32, "gloss": "CHILD", "en": "Child", "hi": "बच्चा", "category": "People", "video_file": "CHILD.mp4",
+     "animation_trigger": "sign_child", "hand_target": "RIGHT_HAND", "facial_expression": "SMILE", "duration_ms": 1200},
 
     # 5. Question Words (WH-Words - Positioned at end in ISL grammar)
-    {"clip_id": 33, "gloss": "WHERE", "en": "Where", "hi": "कहाँ", "category": "Questions", "video_file": "WHERE.mp4"},
-    {"clip_id": 34, "gloss": "WHAT", "en": "What", "hi": "क्या", "category": "Questions", "video_file": "WHAT.mp4"},
-    {"clip_id": 35, "gloss": "WHEN", "en": "When", "hi": "कब", "category": "Questions", "video_file": "WHEN.mp4"},
-    {"clip_id": 36, "gloss": "WHY", "en": "Why", "hi": "क्यों", "category": "Questions", "video_file": "WHY.mp4"},
-    {"clip_id": 37, "gloss": "HOW", "en": "How", "hi": "कैसे", "category": "Questions", "video_file": "HOW.mp4"},
-    {"clip_id": 38, "gloss": "WHO", "en": "Who", "hi": "कौन", "category": "Questions", "video_file": "WHO.mp4"},
-    {"clip_id": 39, "gloss": "HOW_MUCH", "en": "How Much / Price", "hi": "कितना / दाम", "category": "Questions", "video_file": "HOW_MUCH.mp4"},
+    {"clip_id": 33, "gloss": "WHERE", "en": "Where", "hi": "कहाँ", "category": "Questions", "video_file": "WHERE.mp4",
+     "animation_trigger": "sign_where", "hand_target": "BOTH_HANDS", "facial_expression": "QUESTIONING", "duration_ms": 1400},
+    {"clip_id": 34, "gloss": "WHAT", "en": "What", "hi": "क्या", "category": "Questions", "video_file": "WHAT.mp4",
+     "animation_trigger": "sign_what", "hand_target": "BOTH_HANDS", "facial_expression": "QUESTIONING", "duration_ms": 1300},
+    {"clip_id": 35, "gloss": "WHEN", "en": "When", "hi": "कब", "category": "Questions", "video_file": "WHEN.mp4",
+     "animation_trigger": "sign_when", "hand_target": "BOTH_HANDS", "facial_expression": "QUESTIONING", "duration_ms": 1300},
+    {"clip_id": 36, "gloss": "WHY", "en": "Why", "hi": "क्यों", "category": "Questions", "video_file": "WHY.mp4",
+     "animation_trigger": "sign_why", "hand_target": "RIGHT_HAND", "facial_expression": "QUESTIONING", "duration_ms": 1300},
+    {"clip_id": 37, "gloss": "HOW", "en": "How", "hi": "कैसे", "category": "Questions", "video_file": "HOW.mp4",
+     "animation_trigger": "sign_how", "hand_target": "BOTH_HANDS", "facial_expression": "QUESTIONING", "duration_ms": 1400},
+    {"clip_id": 38, "gloss": "WHO", "en": "Who", "hi": "कौन", "category": "Questions", "video_file": "WHO.mp4",
+     "animation_trigger": "sign_who", "hand_target": "RIGHT_HAND", "facial_expression": "QUESTIONING", "duration_ms": 1300},
+    {"clip_id": 39, "gloss": "HOW_MUCH", "en": "How Much / Price", "hi": "कितना / दाम", "category": "Questions", "video_file": "HOW_MUCH.mp4",
+     "animation_trigger": "sign_howmuch", "hand_target": "RIGHT_HAND", "facial_expression": "QUESTIONING", "duration_ms": 1400},
 
     # 6. Common Actions / Verbs
-    {"clip_id": 40, "gloss": "WANT", "en": "Want / Need", "hi": "चाहिए", "category": "Verbs", "video_file": "WANT.mp4"},
-    {"clip_id": 41, "gloss": "COME", "en": "Come", "hi": "आना", "category": "Verbs", "video_file": "COME.mp4"},
-    {"clip_id": 42, "gloss": "GO", "en": "Go", "hi": "जाना", "category": "Verbs", "video_file": "GO.mp4"},
-    {"clip_id": 43, "gloss": "WAIT", "en": "Wait", "hi": "इंतजार", "category": "Verbs", "video_file": "WAIT.mp4"},
-    {"clip_id": 44, "gloss": "UNDERSTAND", "en": "Understand", "hi": "समझना", "category": "Verbs", "video_file": "UNDERSTAND.mp4"},
-    {"clip_id": 45, "gloss": "STOP", "en": "Stop", "hi": "रुकना", "category": "Verbs", "video_file": "STOP.mp4"},
-    {"clip_id": 46, "gloss": "SIT", "en": "Sit", "hi": "बैठना", "category": "Verbs", "video_file": "SIT.mp4"},
-    {"clip_id": 47, "gloss": "CALL", "en": "Call", "hi": "बुलाना", "category": "Verbs", "video_file": "CALL.mp4"},
+    {"clip_id": 40, "gloss": "WANT", "en": "Want / Need", "hi": "चाहिए", "category": "Verbs", "video_file": "WANT.mp4",
+     "animation_trigger": "sign_want", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 41, "gloss": "COME", "en": "Come", "hi": "आना", "category": "Verbs", "video_file": "COME.mp4",
+     "animation_trigger": "sign_come", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 42, "gloss": "GO", "en": "Go", "hi": "जाना", "category": "Verbs", "video_file": "GO.mp4",
+     "animation_trigger": "sign_go", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 43, "gloss": "WAIT", "en": "Wait", "hi": "इंतजार", "category": "Verbs", "video_file": "WAIT.mp4",
+     "animation_trigger": "sign_wait", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 44, "gloss": "UNDERSTAND", "en": "Understand", "hi": "समझना", "category": "Verbs", "video_file": "UNDERSTAND.mp4",
+     "animation_trigger": "sign_understand", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 45, "gloss": "STOP", "en": "Stop", "hi": "रुकना", "category": "Verbs", "video_file": "STOP.mp4",
+     "animation_trigger": "sign_stop", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 46, "gloss": "SIT", "en": "Sit", "hi": "बैठना", "category": "Verbs", "video_file": "SIT.mp4",
+     "animation_trigger": "sign_sit", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 47, "gloss": "CALL", "en": "Call", "hi": "बुलाना", "category": "Verbs", "video_file": "CALL.mp4",
+     "animation_trigger": "sign_call", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1300},
 
     # 7. Greetings & Courtesy
-    {"clip_id": 48, "gloss": "HELLO", "en": "Hello / Namaste", "hi": "नमस्ते", "category": "Greetings", "video_file": "HELLO.mp4"},
-    {"clip_id": 49, "gloss": "THANK_YOU", "en": "Thank You", "hi": "धन्यवाद", "category": "Greetings", "video_file": "THANK_YOU.mp4"},
-    {"clip_id": 50, "gloss": "PLEASE", "en": "Please", "hi": "कृपया", "category": "Greetings", "video_file": "PLEASE.mp4"},
-    {"clip_id": 51, "gloss": "SORRY", "en": "Sorry", "hi": "माफ कीजिए", "category": "Greetings", "video_file": "SORRY.mp4"},
-    {"clip_id": 52, "gloss": "YES", "en": "Yes", "hi": "हाँ", "category": "Greetings", "video_file": "YES.mp4"},
-    {"clip_id": 53, "gloss": "NO", "en": "No", "hi": "नहीं", "category": "Greetings", "video_file": "NO.mp4"},
-    {"clip_id": 54, "gloss": "GOODBYE", "en": "Goodbye", "hi": "अलविदा", "category": "Greetings", "video_file": "GOODBYE.mp4"},
-    {"clip_id": 55, "gloss": "NAME", "en": "Name", "hi": "नाम", "category": "Greetings", "video_file": "NAME.mp4"},
+    {"clip_id": 48, "gloss": "HELLO", "en": "Hello / Namaste", "hi": "नमस्ते", "category": "Greetings", "video_file": "HELLO.mp4",
+     "animation_trigger": "sign_hello", "hand_target": "BOTH_HANDS", "facial_expression": "SMILE", "duration_ms": 1300},
+    {"clip_id": 49, "gloss": "THANK_YOU", "en": "Thank You", "hi": "धन्यवाद", "category": "Greetings", "video_file": "THANK_YOU.mp4",
+     "animation_trigger": "sign_thankyou", "hand_target": "RIGHT_HAND", "facial_expression": "SMILE", "duration_ms": 1200},
+    {"clip_id": 50, "gloss": "PLEASE", "en": "Please", "hi": "कृपया", "category": "Greetings", "video_file": "PLEASE.mp4",
+     "animation_trigger": "sign_please", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 51, "gloss": "SORRY", "en": "Sorry", "hi": "माफ कीजिए", "category": "Greetings", "video_file": "SORRY.mp4",
+     "animation_trigger": "sign_sorry", "hand_target": "RIGHT_HAND", "facial_expression": "CONCERNED", "duration_ms": 1300},
+    {"clip_id": 52, "gloss": "YES", "en": "Yes", "hi": "हाँ", "category": "Greetings", "video_file": "YES.mp4",
+     "animation_trigger": "sign_yes", "hand_target": "RIGHT_HAND", "facial_expression": "SMILE", "duration_ms": 1100},
+    {"clip_id": 53, "gloss": "NO", "en": "No", "hi": "नहीं", "category": "Greetings", "video_file": "NO.mp4",
+     "animation_trigger": "sign_no", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1100},
+    {"clip_id": 54, "gloss": "GOODBYE", "en": "Goodbye", "hi": "अलविदा", "category": "Greetings", "video_file": "GOODBYE.mp4",
+     "animation_trigger": "sign_goodbye", "hand_target": "RIGHT_HAND", "facial_expression": "SMILE", "duration_ms": 1300},
+    {"clip_id": 55, "gloss": "NAME", "en": "Name", "hi": "नाम", "category": "Greetings", "video_file": "NAME.mp4",
+     "animation_trigger": "sign_name", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1200},
 
     # 8. Time & Education / Direction
-    {"clip_id": 56, "gloss": "TIME", "en": "Time", "hi": "समय", "category": "Time", "video_file": "TIME.mp4"},
-    {"clip_id": 57, "gloss": "TODAY", "en": "Today", "hi": "आज", "category": "Time", "video_file": "TODAY.mp4"},
-    {"clip_id": 58, "gloss": "TOMORROW", "en": "Tomorrow", "hi": "कल", "category": "Time", "video_file": "TOMORROW.mp4"},
-    {"clip_id": 59, "gloss": "SCHOOL", "en": "School / Classroom", "hi": "स्कूल", "category": "Education", "video_file": "SCHOOL.mp4"},
-    {"clip_id": 60, "gloss": "TEACHER", "en": "Teacher", "hi": "अध्यापक", "category": "Education", "video_file": "TEACHER.mp4"},
-    {"clip_id": 61, "gloss": "BOOK", "en": "Book", "hi": "किताब", "category": "Education", "video_file": "BOOK.mp4"},
-    {"clip_id": 62, "gloss": "NOT", "en": "Not / Don't", "hi": "नहीं", "category": "Grammar", "video_file": "NOT.mp4"},
+    {"clip_id": 56, "gloss": "TIME", "en": "Time", "hi": "समय", "category": "Time", "video_file": "TIME.mp4",
+     "animation_trigger": "sign_time", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 57, "gloss": "TODAY", "en": "Today", "hi": "आज", "category": "Time", "video_file": "TODAY.mp4",
+     "animation_trigger": "sign_today", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1200},
+    {"clip_id": 58, "gloss": "TOMORROW", "en": "Tomorrow", "hi": "कल", "category": "Time", "video_file": "TOMORROW.mp4",
+     "animation_trigger": "sign_tomorrow", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 59, "gloss": "SCHOOL", "en": "School / Classroom", "hi": "स्कूल", "category": "Education", "video_file": "SCHOOL.mp4",
+     "animation_trigger": "sign_school", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1400},
+    {"clip_id": 60, "gloss": "TEACHER", "en": "Teacher", "hi": "अध्यापक", "category": "Education", "video_file": "TEACHER.mp4",
+     "animation_trigger": "sign_teacher", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1400},
+    {"clip_id": 61, "gloss": "BOOK", "en": "Book", "hi": "किताब", "category": "Education", "video_file": "BOOK.mp4",
+     "animation_trigger": "sign_book", "hand_target": "BOTH_HANDS", "facial_expression": "NEUTRAL", "duration_ms": 1300},
+    {"clip_id": 62, "gloss": "NOT", "en": "Not / Don't", "hi": "नहीं", "category": "Grammar", "video_file": "NOT.mp4",
+     "animation_trigger": "sign_not", "hand_target": "RIGHT_HAND", "facial_expression": "NEUTRAL", "duration_ms": 1200},
 ]
 
 # Fast Lookup Maps
@@ -92,7 +154,6 @@ GLOSS_BY_ID: Dict[int, Dict[str, Any]] = {item["clip_id"]: item for item in ISL_
 GLOSS_BY_NAME: Dict[str, Dict[str, Any]] = {item["gloss"]: item for item in ISL_VOCABULARY}
 
 # Extended Bilingual Synonym Mapping
-# Maps common English and Hindi words/phrases to standardized ISL glosses
 SYNONYM_MAP: Dict[str, str] = {
     # English synonyms
     "help": "HELP", "assist": "HELP", "aid": "HELP", "support": "HELP",
@@ -245,19 +306,13 @@ SYNONYM_MAP: Dict[str, str] = {
 
 
 def get_all_vocabulary() -> List[Dict[str, Any]]:
-    """Returns the complete master list of vocabulary items."""
     return ISL_VOCABULARY
 
 
 def lookup_gloss(word: str) -> Optional[str]:
-    """
-    Look up a single word (English or Hindi) in the synonym map.
-    Returns normalized ISL gloss or None if not directly matched.
-    """
     cleaned = word.strip().lower()
     return SYNONYM_MAP.get(cleaned)
 
 
 def get_sign_metadata(gloss: str) -> Optional[Dict[str, Any]]:
-    """Retrieve metadata (clip_id, translations, category) for an ISL gloss."""
     return GLOSS_BY_NAME.get(gloss)
