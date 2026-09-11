@@ -127,21 +127,30 @@ def convert_text_to_isl(payload: TextToISLRequest, session_id: Optional[str] = "
 
 @app.post("/speech-to-isl", response_model=ISLGlossResponse, tags=["Mode B: Speak/Text -> Sign"])
 async def convert_speech_to_isl(
-    audio: UploadFile = File(...),
+    audio: Optional[UploadFile] = File(None),
+    file: Optional[UploadFile] = File(None),
     session_id: Optional[str] = Form("default"),
 ):
     """
     Ingests spoken audio (.wav, .mp3, .m4a), transcribes via Whisper (auto-detecting Hindi or English),
-    and maps the transcribed text to ISL glosses and animation clip IDs.
+    and maps the transcribed text to ISL glosses and animation sequence.
+    Accepts audio upload under either 'audio' or 'file' form field.
     """
-    content = await audio.read()
+    target_upload = audio or file
+    if not target_upload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Audio file missing. Please provide an audio upload in field 'audio' or 'file'.",
+        )
+
+    content = await target_upload.read()
     if len(content) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Uploaded audio file is empty",
         )
 
-    stt_result = transcribe_audio_bytes(content, filename=audio.filename or "audio.wav")
+    stt_result = transcribe_audio_bytes(content, filename=target_upload.filename or "audio.wav")
     text = stt_result.get("text", "")
     detected_lang = stt_result.get("lang", "en")
 

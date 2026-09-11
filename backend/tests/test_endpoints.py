@@ -119,3 +119,17 @@ def test_text_to_isl_humanoid_animation_sequence():
     assert "animation_trigger" in first_action
     assert first_action["duration_ms"] > 0
     assert "/avatar/poses/HOSPITAL" in first_action["pose_endpoint"]
+
+
+def test_speech_to_isl_upload():
+    import io
+    fake_wav_bytes = b"RIFF....WAVEfmt ...." + (b"\x00" * 100)
+    response = client.post(
+        "/speech-to-isl",
+        files={"audio": ("test_recording.wav", io.BytesIO(fake_wav_bytes), "audio/wav")},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "glosses" in data
+    assert "animation_sequence" in data
+    assert len(data["animation_sequence"]) > 0
