@@ -1,0 +1,19 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Audio temporary files
+backend/temp_audio/
+
+# OS Files
+.DS_Store
+Thumbs.db
