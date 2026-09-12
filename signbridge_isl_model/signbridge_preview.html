@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SignBridge — ISL Pipeline Web Preview</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --border: #2a2f3a;
+    --text: #e8eaed; --muted: #9aa1ac; --accent: #6ea8fe;
+    --ok: #4caf78; --warn: #d9a441; --bad: #d96e6e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text); padding: 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1100px; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .panel h2 { font-size: 14px; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  input[type=text] {
+    width: 100%; padding: 10px 12px; background: #10131a; border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 14px; margin-bottom: 10px;
+  }
+  select {
+    padding: 9px 10px; background: #10131a; border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 13px; margin-bottom: 10px;
+  }
+  button {
+    background: var(--accent); color: #0f1115; border: none; border-radius: 8px;
+    padding: 10px 16px; font-weight: 600; font-size: 13px; cursor: pointer;
+  }
+  button:hover { opacity: 0.9; }
+  button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .status-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  .status-complete { background: rgba(76,175,120,0.15); color: var(--ok); }
+  .status-partial { background: rgba(217,164,65,0.15); color: var(--warn); }
+  .status-unknown { background: rgba(217,110,110,0.15); color: var(--bad); }
+  .gloss-chip {
+    display: inline-flex; align-items: center; gap: 6px; background: #10131a;
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; margin: 3px;
+    font-size: 12px; font-family: ui-monospace, monospace;
+  }
+  .gloss-chip.playing { border-color: var(--accent); color: var(--accent); }
+  .gloss-chip.missing-video { border-color: var(--bad); color: var(--bad); }
+  .unknown-chip {
+    display: inline-flex; background: rgba(217,110,110,0.1); border: 1px solid rgba(217,110,110,0.3);
+    color: var(--bad); border-radius: 6px; padding: 4px 10px; margin: 3px; font-size: 12px;
+  }
+  pre { background: #10131a; border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+    font-size: 12px; overflow-x: auto; color: var(--muted); }
+  video { width: 100%; max-width: 420px; border-radius: 8px; background: #000; display: block; margin: 0 auto; }
+  .video-label { text-align: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .folder-status { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .examples button { background: transparent; border: 1px solid var(--border); color: var(--muted);
+    font-weight: 400; padding: 5px 10px; margin: 2px; font-size: 12px; }
+  .examples button:hover { border-color: var(--accent); color: var(--accent); }
+  .empty-state { color: var(--muted); font-size: 13px; text-align: center; padding: 40px 0; }
+</style>
+</head>
+<body>
+
+<h1>SignBridge — Text → ISL Pipeline Preview</h1>
+<div class="sub">Runs the exact same normalize → phrase-match → word-match logic as text_to_isl.py, in-browser. Optionally load your local dataset folder to preview actual video playback.</div>
+
+<div class="grid">
+
+  <div class="panel">
+    <h2>1. Input</h2>
+    <input type="text" id="textInput" placeholder="Type a sentence, e.g. Thank you" value="Thank you" />
+    <div class="row">
+      <select id="langSelect">
+        <option value="auto">Auto-detect</option>
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+      </select>
+      <button id="translateBtn">Translate</button>
+    </div>
+    <div class="hint">Known-good demo phrases (resolve to "complete" with this dataset):</div>
+    <div class="examples" id="examples"></div>
+
+    <h2 style="margin-top:20px;">2. Load your dataset (optional, for video playback)</h2>
+    <input type="file" id="folderInput" webkitdirectory directory multiple />
+    <div class="folder-status" id="folderStatus">No folder loaded — you'll still see the gloss sequence and JSON result, just no video playback.</div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Result</h2>
+    <div id="resultArea">
+      <div class="empty-state">Enter text and click Translate</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="grid" style="margin-top:16px;">
+  <div class="panel" style="grid-column: 1 / -1;">
+    <h2>4. Video playback</h2>
+    <div id="playerArea">
+      <div class="empty-state">No sequence yet.</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:16px;">
+  <div class="panel" style="grid-column: 1 / -1;">
+    <h2>Raw JSON (this is exactly what Flutter would receive)</h2>
+    <pre id="jsonOut">—</pre>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------
+// Embedded data — generated from the real dataset by build_from_dataset.py.
+// This is the SAME isl_dictionary.json / phrase_rules.json shipped in ml/.
+// ---------------------------------------------------------------------
+const ISL_DICTIONARY = {"0": {"english": "0", "video": "assets/isl/0.mp4"}, "1": {"english": "1", "video": "assets/isl/1.mp4"}, "2": {"english": "2", "video": "assets/isl/2.mp4"}, "3": {"english": "3", "video": "assets/isl/3.mp4"}, "4": {"english": "4", "video": "assets/isl/4.mp4"}, "5": {"english": "5", "video": "assets/isl/5.mp4"}, "6": {"english": "6", "video": "assets/isl/6.mp4"}, "7": {"english": "7", "video": "assets/isl/7.mp4"}, "8": {"english": "8", "video": "assets/isl/8.mp4"}, "9": {"english": "9", "video": "assets/isl/9.mp4"}, "A": {"english": "a", "video": "assets/isl/A.mp4"}, "AFTER": {"english": "after", "video": "assets/isl/After.mp4"}, "AGAIN": {"english": "again", "video": "assets/isl/Again.mp4"}, "AGAINST": {"english": "against", "video": "assets/isl/Against.mp4"}, "AGE": {"english": "age", "video": "assets/isl/Age.mp4"}, "ALL": {"english": "all", "video": "assets/isl/All.mp4"}, "ALONE": {"english": "alone", "video": "assets/isl/Alone.mp4"}, "ALSO": {"english": "also", "video": "assets/isl/Also.mp4"}, "AND": {"english": "and", "video": "assets/isl/And.mp4"}, "ASK": {"english": "ask", "video": "assets/isl/Ask.mp4"}, "AT": {"english": "at", "video": "assets/isl/At.mp4"}, "B": {"english": "b", "video": "assets/isl/B.mp4"}, "BE": {"english": "be", "video": "assets/isl/Be.mp4"}, "BEAUTIFUL": {"english": "beautiful", "video": "assets/isl/Beautiful.mp4"}, "BEFORE": {"english": "before", "video": "assets/isl/Before.mp4"}, "BEST": {"english": "best", "video": "assets/isl/Best.mp4"}, "BETTER": {"english": "better", "video": "assets/isl/Better.mp4"}, "BUSY": {"english": "busy", "video": "assets/isl/Busy.mp4"}, "BUT": {"english": "but", "video": "assets/isl/But.mp4"}, "BYE": {"english": "bye", "hindi": "अलविदा", "video": "assets/isl/Bye.mp4"}, "C": {"english": "c", "video": "assets/isl/C.mp4"}, "CAN": {"english": "can", "video": "assets/isl/Can.mp4"}, "CANNOT": {"english": "cannot", "video": "assets/isl/Cannot.mp4"}, "CHANGE": {"english": "change", "video": "assets/isl/Change.mp4"}, "COLLEGE": {"english": "college", "video": "assets/isl/College.mp4"}, "COME": {"english": "come", "hindi": "आओ", "video": "assets/isl/Come.mp4"}, "COMPUTER": {"english": "computer", "video": "assets/isl/Computer.mp4"}, "D": {"english": "d", "video": "assets/isl/D.mp4"}, "DAY": {"english": "day", "hindi": "दिन", "video": "assets/isl/Day.mp4"}, "DISTANCE": {"english": "distance", "video": "assets/isl/Distance.mp4"}, "DO": {"english": "do", "video": "assets/isl/Do.mp4"}, "DOES_NOT": {"english": "does not", "video": "assets/isl/Does Not.mp4"}, "DO_NOT": {"english": "do not", "video": "assets/isl/Do Not.mp4"}, "E": {"english": "e", "video": "assets/isl/E.mp4"}, "EAT": {"english": "eat", "video": "assets/isl/Eat.mp4"}, "ENGINEER": {"english": "engineer", "video": "assets/isl/Engineer.mp4"}, "F": {"english": "f", "video": "assets/isl/F.mp4"}, "FIGHT": {"english": "fight", "video": "assets/isl/Fight.mp4"}, "FINISH": {"english": "finish", "video": "assets/isl/Finish.mp4"}, "FROM": {"english": "from", "video": "assets/isl/From.mp4"}, "G": {"english": "g", "video": "assets/isl/G.mp4"}, "GLITTER": {"english": "glitter", "video": "assets/isl/Glitter.mp4"}, "GO": {"english": "go", "hindi": "जाओ", "video": "assets/isl/Go.mp4"}, "GOD": {"english": "god", "video": "assets/isl/God.mp4"}, "GOLD": {"english": "gold", "video": "assets/isl/Gold.mp4"}, "GOOD": {"english": "good", "hindi": "अच्छा", "video": "assets/isl/Good.mp4"}, "GREAT": {"english": "great", "video": "assets/isl/Great.mp4"}, "H": {"english": "h", "video": "assets/isl/H.mp4"}, "HAND": {"english": "hand", "video": "assets/isl/Hand.mp4"}, "HANDS": {"english": "hands", "video": "assets/isl/Hands.mp4"}, "HAPPY": {"english": "happy", "hindi": "खुश", "video": "assets/isl/Happy.mp4"}, "HELLO": {"english": "hello", "hindi": "नमस्ते", "video": "assets/isl/Hello.mp4"}, "HELP": {"english": "help", "hindi": "मदद", "video": "assets/isl/Help.mp4"}, "HER": {"english": "her", "video": "assets/isl/Her.mp4"}, "HERE": {"english": "here", "hindi": "यहाँ", "video": "assets/isl/Here.mp4"}, "HIS": {"english": "his", "video": "assets/isl/His.mp4"}, "HOME": {"english": "home", "hindi": "घर", "video": "assets/isl/Home.mp4"}, "HOMEPAGE": {"english": "homepage", "video": "assets/isl/Homepage.mp4"}, "HOW": {"english": "how", "hindi": "कैसे", "video": "assets/isl/How.mp4"}, "I": {"english": "i", "hindi": "मैं", "video": "assets/isl/I.mp4"}, "INVENT": {"english": "invent", "video": "assets/isl/Invent.mp4"}, "IT": {"english": "it", "video": "assets/isl/It.mp4"}, "J": {"english": "j", "video": "assets/isl/J.mp4"}, "K": {"english": "k", "video": "assets/isl/K.mp4"}, "KEEP": {"english": "keep", "video": "assets/isl/Keep.mp4"}, "L": {"english": "l", "video": "assets/isl/L.mp4"}, "LANGUAGE": {"english": "language", "video": "assets/isl/Language.mp4"}, "LAUGH": {"english": "laugh", "video": "assets/isl/Laugh.mp4"}, "LEARN": {"english": "learn", "video": "assets/isl/Learn.mp4"}, "M": {"english": "m", "video": "assets/isl/M.mp4"}, "ME": {"english": "me", "video": "assets/isl/ME.mp4"}, "MORE": {"english": "more", "video": "assets/isl/More.mp4"}, "MY": {"english": "my", "hindi": "मेरा", "video": "assets/isl/My.mp4"}, "N": {"english": "n", "video": "assets/isl/N.mp4"}, "NAME": {"english": "name", "hindi": "नाम", "video": "assets/isl/Name.mp4"}, "NEXT": {"english": "next", "video": "assets/isl/Next.mp4"}, "NOT": {"english": "not", "video": "assets/isl/Not.mp4"}, "NOW": {"english": "now", "hindi": "अभी", "video": "assets/isl/Now.mp4"}, "O": {"english": "o", "video": "assets/isl/O.mp4"}, "OF": {"english": "of", "video": "assets/isl/Of.mp4"}, "ON": {"english": "on", "video": "assets/isl/On.mp4"}, "OUR": {"english": "our", "video": "assets/isl/Our.mp4"}, "OUT": {"english": "out", "video": "assets/isl/Out.mp4"}, "P": {"english": "p", "video": "assets/isl/P.mp4"}, "PRETTY": {"english": "pretty", "video": "assets/isl/Pretty.mp4"}, "Q": {"english": "q", "video": "assets/isl/Q.mp4"}, "R": {"english": "r", "video": "assets/isl/R.mp4"}, "RIGHT": {"english": "right", "hindi": "सही", "video": "assets/isl/Right.mp4"}, "S": {"english": "s", "video": "assets/isl/S.mp4"}, "SAD": {"english": "sad", "hindi": "उदास", "video": "assets/isl/Sad.mp4"}, "SAFE": {"english": "safe", "video": "assets/isl/Safe.mp4"}, "SEE": {"english": "see", "video": "assets/isl/See.mp4"}, "SELF": {"english": "self", "video": "assets/isl/Self.mp4"}, "SIGN": {"english": "sign", "video": "assets/isl/Sign.mp4"}, "SING": {"english": "sing", "video": "assets/isl/Sing.mp4"}, "SO": {"english": "so", "video": "assets/isl/So.mp4"}, "SOUND": {"english": "sound", "video": "assets/isl/Sound.mp4"}, "STAY": {"english": "stay", "video": "assets/isl/Stay.mp4"}, "STUDY": {"english": "study", "hindi": "पढ़ाई", "video": "assets/isl/Study.mp4"}, "T": {"english": "t", "video": "assets/isl/T.mp4"}, "TALK": {"english": "talk", "video": "assets/isl/Talk.mp4"}, "TELEVISION": {"english": "television", "video": "assets/isl/Television.mp4"}, "THANK": {"english": "thank", "video": "assets/isl/Thank.mp4"}, "THANK_YOU": {"english": "thank you", "hindi": "धन्यवाद", "video": "assets/isl/Thank You.mp4"}, "THAT": {"english": "that", "video": "assets/isl/That.mp4"}, "THEY": {"english": "they", "video": "assets/isl/They.mp4"}, "THIS": {"english": "this", "video": "assets/isl/This.mp4"}, "THOSE": {"english": "those", "video": "assets/isl/Those.mp4"}, "TIME": {"english": "time", "hindi": "समय", "video": "assets/isl/Time.mp4"}, "TO": {"english": "to", "video": "assets/isl/To.mp4"}, "TYPE": {"english": "type", "video": "assets/isl/Type.mp4"}, "U": {"english": "u", "video": "assets/isl/U.mp4"}, "US": {"english": "us", "video": "assets/isl/Us.mp4"}, "V": {"english": "v", "video": "assets/isl/V.mp4"}, "W": {"english": "w", "video": "assets/isl/W.mp4"}, "WALK": {"english": "walk", "video": "assets/isl/Walk.mp4"}, "WASH": {"english": "wash", "video": "assets/isl/Wash.mp4"}, "WAY": {"english": "way", "video": "assets/isl/Way.mp4"}, "WE": {"english": "we", "hindi": "हम", "video": "assets/isl/We.mp4"}, "WELCOME": {"english": "welcome", "video": "assets/isl/Welcome.mp4"}, "WHAT": {"english": "what", "hindi": "क्या", "video": "assets/isl/What.mp4"}, "WHEN": {"english": "when", "hindi": "कब", "video": "assets/isl/When.mp4"}, "WHERE": {"english": "where", "hindi": "कहाँ", "video": "assets/isl/Where.mp4"}, "WHICH": {"english": "which", "video": "assets/isl/Which.mp4"}, "WHO": {"english": "who", "hindi": "कौन", "video": "assets/isl/Who.mp4"}, "WHOLE": {"english": "whole", "video": "assets/isl/Whole.mp4"}, "WHOSE": {"english": "whose", "video": "assets/isl/Whose.mp4"}, "WHY": {"english": "why", "hindi": "क्यों", "video": "assets/isl/Why.mp4"}, "WILL": {"english": "will", "video": "assets/isl/Will.mp4"}, "WITH": {"english": "with", "video": "assets/isl/With.mp4"}, "WITHOUT": {"english": "without", "video": "assets/isl/Without.mp4"}, "WORDS": {"english": "words", "video": "assets/isl/Words.mp4"}, "WORK": {"english": "work", "hindi": "काम", "video": "assets/isl/Work.mp4"}, "WORLD": {"english": "world", "video": "assets/isl/World.mp4"}, "WRONG": {"english": "wrong", "hindi": "गलत", "video": "assets/isl/Wrong.mp4"}, "X": {"english": "x", "video": "assets/isl/X.mp4"}, "Y": {"english": "y", "video": "assets/isl/Y.mp4"}, "YOU": {"english": "you", "hindi": "तुम", "video": "assets/isl/You.mp4"}, "YOUR": {"english": "your", "hindi": "तुम्हारा", "video": "assets/isl/Your.mp4"}, "YOURSELF": {"english": "yourself", "video": "assets/isl/Yourself.mp4"}, "Z": {"english": "z", "video": "assets/isl/Z.mp4"}};
+const PHRASE_RULES = {"hello": ["HELLO"], "hi": ["HELLO"], "hey": ["HELLO"], "bye": ["BYE"], "goodbye": ["BYE"], "good bye": ["BYE"], "see you": ["BYE"], "see you later": ["BYE"], "thank you": ["THANK_YOU"], "thanks": ["THANK_YOU"], "many thanks": ["THANK_YOU"], "welcome": ["WELCOME"], "you are welcome": ["WELCOME"], "help": ["HELP"], "help me": ["HELP", "ME"], "can you help me": ["CAN", "YOU", "HELP", "ME"], "i need help": ["I", "HELP"], "where is home": ["WHERE", "HOME"], "where are you": ["WHERE", "YOU"], "where are you going": ["WHERE", "YOU", "GO"], "what is your name": ["WHAT", "YOUR", "NAME"], "what is this": ["WHAT", "THIS"], "what is that": ["WHAT", "THAT"], "who are you": ["WHO", "YOU"], "who is this": ["WHO", "THIS"], "come here": ["COME", "HERE"], "go now": ["GO", "NOW"], "go home": ["GO", "HOME"], "do not go": ["DO_NOT", "GO"], "does not work": ["DOES_NOT", "WORK"], "i am busy": ["I", "BUSY"], "i am fine": ["I", "GOOD"], "how are you": ["HOW", "YOU"], "good work": ["GOOD", "WORK"], "my name": ["MY", "NAME"], "your name": ["YOUR", "NAME"],
+
+  "नमस्ते": ["HELLO"],
+  "धन्यवाद": ["THANK_YOU"],
+  "अलविदा": ["BYE"],
+  "मेरा नाम": ["MY", "NAME"],
+  "तुम्हारा नाम": ["YOUR", "NAME"],
+  "आपका नाम": ["YOUR", "NAME"],
+  "मेरा नाम क्या": ["WHAT", "MY", "NAME"],
+  "मेरा नाम क्या है": ["WHAT", "MY", "NAME"],
+  "तुम्हारा नाम क्या है": ["WHAT", "YOUR", "NAME"],
+  "आपका नाम क्या है": ["WHAT", "YOUR", "NAME"],
+  "घर कहाँ": ["WHERE", "HOME"],
+  "घर कहाँ है": ["WHERE", "HOME"],
+  "तुम कौन हो": ["WHO", "YOU"],
+  "आप कौन हैं": ["WHO", "YOU"],
+  "यह क्या है": ["WHAT", "THIS"],
+  "वह क्या है": ["WHAT", "THAT"],
+  "यहाँ आओ": ["COME", "HERE"],
+  "इधर आओ": ["COME", "HERE"],
+  "अभी जाओ": ["GO", "NOW"],
+  "घर जाओ": ["GO", "HOME"],
+  "मत जाओ": ["DO_NOT", "GO"],
+  "काम नहीं करता": ["DOES_NOT", "WORK"],
+  "काम करो": ["WORK", "DO"],
+  "आप कैसे हैं": ["HOW", "YOU"],
+  "तुम कैसे हो": ["HOW", "YOU"],
+  "मैं व्यस्त हूँ": ["I", "BUSY"],
+  "मैं ठीक हूँ": ["I", "GOOD"],
+  "अच्छा काम": ["GOOD", "WORK"],
+  "मदद करो": ["HELP", "DO"],
+  "मुझे मदद": ["I", "HELP"],
+  "मेरा घर": ["MY", "HOME"],
+
+  "सबसे अच्छा": ["BEST"],
+  "नहीं सकना": ["CANNOT"],
+  "मत करो": ["DO_NOT"],
+  "नहीं करता": ["DOES_NOT"],
+  "कौन सा": ["WHICH"],
+  "वे सब": ["THOSE"],
+  "पढ़ाई करो": ["STUDY"],
+  "पढ़ाई करना": ["STUDY"]};
+const AVAILABLE_GLOSSES = new Set(Object.keys(ISL_DICTIONARY));
+
+const WORD_SYNONYMS = {
+  "hi": "HELLO", "hey": "HELLO", "hola": "HELLO",
+  "bye": "BYE", "goodbye": "BYE", "cya": "BYE",
+  "thanks": "THANK_YOU", "thankyou": "THANK_YOU", "thx": "THANK_YOU",
+  "u": "YOU", "ur": "YOUR",
+  "im": "I",
+};
+
+const DROP_WORDS = new Set(["a", "an", "the", "is", "am", "are", "was", "were"]);
+
+// Mirrors HINDI_WORD_MAP / drop_words in hindi_lexicon.json — keep in sync.
+const HINDI_WORD_MAP = {
+  "मैं": "I", "मुझे": "I", "मुझको": "I", "मुझ": "I",
+  "मेरा": "MY", "मेरी": "MY", "मेरे": "MY",
+  "हम": "WE", "हमें": "US", "हमको": "US",
+  "हमारा": "OUR", "हमारी": "OUR", "हमारे": "OUR",
+  "तुम": "YOU", "आप": "YOU", "तू": "YOU", "तुम्हें": "YOU", "आपको": "YOU", "तुमको": "YOU",
+  "तुम्हारा": "YOUR", "तुम्हारी": "YOUR", "तुम्हारे": "YOUR", "आपका": "YOUR", "आपकी": "YOUR",
+  "वह": "THAT", "वो": "THAT", "वे": "THEY", "ये": "THOSE",
+  "उसका": "HIS", "उसकी": "HER", "उनका": "HIS", "उनकी": "HER",
+  "यह": "THIS", "इस": "THIS", "इसे": "IT", "इसका": "IT",
+  "खुद": "YOURSELF", "स्वयं": "SELF",
+  "अपना": "SELF", "अपने": "SELF", "अपनी": "SELF",
+
+  "नमस्ते": "HELLO", "नमस्कार": "HELLO", "प्रणाम": "HELLO", "हेलो": "HELLO",
+  "धन्यवाद": "THANK_YOU", "शुक्रिया": "THANK_YOU", "थैंक्स": "THANK_YOU",
+  "अलविदा": "BYE", "बाय": "BYE",
+  "स्वागत": "WELCOME",
+  "मदद": "HELP", "सहायता": "HELP",
+
+  "कहाँ": "WHERE", "कहां": "WHERE", "किधर": "WHERE",
+  "क्या": "WHAT",
+  "कब": "WHEN",
+  "क्यों": "WHY", "क्यूँ": "WHY",
+  "कैसे": "HOW", "कैसा": "HOW", "कैसी": "HOW",
+  "कौन": "WHO", "किसने": "WHO", "किसको": "WHO",
+  "किसका": "WHOSE", "किसकी": "WHOSE",
+
+  "करना": "DO", "करो": "DO", "करता": "DO", "करते": "DO", "कर": "DO",
+  "खाना": "EAT", "खाओ": "EAT",
+  "सीखना": "LEARN", "सीखो": "LEARN",
+  "देखना": "SEE", "देखो": "SEE",
+  "आना": "COME", "आओ": "COME", "आइए": "COME", "आ": "COME",
+  "जाना": "GO", "जाओ": "GO", "जाइए": "GO",
+  "चलना": "WALK", "चलो": "WALK",
+  "गाना": "SING", "गाओ": "SING",
+  "हँसना": "LAUGH", "हंसना": "LAUGH",
+  "बात": "TALK", "बोलना": "TALK", "बोलो": "TALK",
+  "पूछना": "ASK", "पूछो": "ASK",
+  "बदलना": "CHANGE", "बदलो": "CHANGE",
+  "रखना": "KEEP", "रखो": "KEEP",
+  "धोना": "WASH", "धोओ": "WASH",
+  "लड़ना": "FIGHT",
+  "ठहरना": "STAY", "रुकना": "STAY", "ठहरो": "STAY",
+  "खत्म": "FINISH", "समाप्त": "FINISH", "पूरा": "WHOLE",
+  "सकना": "CAN", "सकता": "CAN", "सकते": "CAN", "सकती": "CAN",
+  "टाइप": "TYPE",
+  "पढ़ाई": "STUDY", "पढ़ना": "STUDY", "अध्ययन": "STUDY",
+  "करेंगे": "WILL", "करेगा": "WILL", "करूँगा": "WILL", "होगा": "WILL",
+
+  "अच्छा": "GOOD", "अच्छी": "GOOD", "अच्छे": "GOOD", "ठीक": "GOOD",
+  "बेहतर": "BETTER", "बढ़िया": "BETTER",
+  "बेस्ट": "BEST",
+  "महान": "GREAT", "शानदार": "GREAT",
+  "सुंदर": "BEAUTIFUL", "खूबसूरत": "BEAUTIFUL",
+  "प्यारा": "PRETTY",
+  "उदास": "SAD", "दुखी": "SAD",
+  "खुश": "HAPPY", "प्रसन्न": "HAPPY",
+  "व्यस्त": "BUSY",
+  "अकेला": "ALONE", "अकेली": "ALONE",
+  "सुरक्षित": "SAFE",
+  "गलत": "WRONG",
+  "सही": "RIGHT",
+
+  "घर": "HOME",
+  "नाम": "NAME",
+  "समय": "TIME", "वक्त": "TIME", "बजे": "TIME",
+  "दिन": "DAY",
+  "काम": "WORK", "नौकरी": "WORK",
+  "भाषा": "LANGUAGE", "बोली": "LANGUAGE",
+  "शब्द": "WORDS", "शब्दों": "WORDS",
+  "दुनिया": "WORLD", "संसार": "WORLD",
+  "आवाज़": "SOUND", "आवाज": "SOUND", "ध्वनि": "SOUND",
+  "हाथ": "HAND", "हाथों": "HANDS",
+  "रास्ता": "WAY", "राह": "WAY", "बाहर": "OUT",
+  "दूरी": "DISTANCE", "फासला": "DISTANCE",
+  "उम्र": "AGE",
+  "कॉलेज": "COLLEGE", "महाविद्यालय": "COLLEGE",
+  "कंप्यूटर": "COMPUTER", "संगणक": "COMPUTER",
+  "टेलीविजन": "TELEVISION", "टीवी": "TELEVISION",
+  "इंजीनियर": "ENGINEER",
+  "भगवान": "GOD", "ईश्वर": "GOD",
+  "सोना": "GOLD",
+  "इशारा": "SIGN", "संकेत": "SIGN",
+
+  "और": "AND",
+  "लेकिन": "BUT", "परन्तु": "BUT", "मगर": "BUT",
+  "भी": "ALSO",
+  "फिर": "AGAIN", "दोबारा": "AGAIN",
+  "बाद": "AFTER",
+  "पहले": "BEFORE",
+  "अगला": "NEXT", "अगली": "NEXT",
+  "ज्यादा": "MORE", "अधिक": "MORE", "ज़्यादा": "MORE",
+  "सब": "ALL", "सारे": "ALL", "सारा": "ALL",
+  "इसलिए": "SO", "तो": "SO",
+  "साथ": "WITH",
+  "बिना": "WITHOUT",
+  "खिलाफ": "AGAINST", "विरुद्ध": "AGAINST",
+  "नहीं": "NOT", "मत": "NOT", "ना": "NOT",
+  "का": "OF", "के": "OF", "की": "OF",
+  "को": "TO",
+  "पर": "ON", "में": "ON",
+  "से": "FROM",
+  "यहाँ": "HERE", "यहां": "HERE", "इधर": "HERE",
+  "अभी": "NOW",
+};
+
+// Copulas / the ergative postposition — no sign of their own, safe to drop.
+const HINDI_DROP_WORDS = new Set([
+  "है", "हैं", "था", "थी", "थे", "हो", "हूँ", "हूं", "हुं",
+  "ने", "ही", "तक", "वाला", "वाली", "वाले",
+]);
+
+// Build bigram map from dictionary english fields (mirrors _collapse_known_bigrams)
+const BIGRAM_MAP = {};
+for (const [gloss, entry] of Object.entries(ISL_DICTIONARY)) {
+  const words = entry.english.split(" ");
+  if (words.length === 2) BIGRAM_MAP[words[0] + "|" + words[1]] = gloss;
+}
+
+function isHindi(text) {
+  for (const ch of text) {
+    const cp = ch.codePointAt(0);
+    if (cp >= 0x0900 && cp <= 0x097F) return true;
+  }
+  return false;
+}
+
+function stripPunct(text) {
+  // \u0964 (।) and \u0965 (॥) are the Devanagari danda — not in ASCII punctuation.
+  return text.replace(/[!"#$%&'()*+,\-./:;<=>?@\[\]^_`{|}~\u0964\u0965\u201C\u201D\u2018\u2019\u2014\u2013\u2026\u00B7]/g, "");
+}
+
+function normalizeText(text, language) {
+  if (language === "auto") language = isHindi(text) ? "hi" : "en";
+  text = text.trim().toLowerCase();
+  text = stripPunct(text);
+  text = text.replace(/\s+/g, " ").trim();
+
+  const rawTokens = text.split(" ");
+  if (language === "hi") {
+    const tokens = rawTokens
+      .filter(t => t && !HINDI_DROP_WORDS.has(t))
+      .map(t => HINDI_WORD_MAP[t] || t);
+    return { normalized: text, tokens, lang: "hi" };
+  }
+  const tokens = rawTokens.filter(t => t && !DROP_WORDS.has(t));
+  return { normalized: text, tokens, lang: "en" };
+}
+
+function collapseKnownBigrams(tokens) {
+  const result = [];
+  let i = 0;
+  while (i < tokens.length) {
+    if (i + 1 < tokens.length) {
+      const key = tokens[i] + "|" + tokens[i + 1];
+      if (BIGRAM_MAP[key]) {
+        result.push(BIGRAM_MAP[key]);
+        i += 2;
+        continue;
+      }
+    }
+    result.push(tokens[i]);
+    i += 1;
+  }
+  return result;
+}
+
+function matchWords(tokens) {
+  const known = [], unknown = [];
+  for (const tok of tokens) {
+    if (!tok) continue;
+    const upper = tok.toUpperCase();
+    if (AVAILABLE_GLOSSES.has(upper)) { known.push(upper); continue; }
+    const syn = WORD_SYNONYMS[tok];
+    if (syn && AVAILABLE_GLOSSES.has(syn)) { known.push(syn); continue; }
+    unknown.push(tok);
+  }
+  return { known, unknown };
+}
+
+function translate(text, language) {
+  if (!text || !text.trim()) return { status: "unknown", gloss_sequence: [], unknown: [] };
+
+  const { normalized, tokens: rawTokens } = normalizeText(text, language);
+
+  const phraseGlosses = PHRASE_RULES[normalized];
+  if (phraseGlosses) {
+    return {
+      status: "complete",
+      gloss_sequence: phraseGlosses.map(g => ({ gloss: g, video: ISL_DICTIONARY[g].video })),
+    };
+  }
+
+  const tokens = collapseKnownBigrams(rawTokens);
+  const { known, unknown } = matchWords(tokens);
+  const gloss_sequence = known.map(g => ({ gloss: g, video: ISL_DICTIONARY[g].video }));
+
+  if (known.length === 0) return { status: "unknown", gloss_sequence: [], unknown };
+  if (unknown.length > 0) return { status: "partial", gloss_sequence, unknown };
+  return { status: "complete", gloss_sequence };
+}
+
+// ---------------------------------------------------------------------
+// UI wiring
+// ---------------------------------------------------------------------
+const EXAMPLES = ["Thank you", "Where is home", "Come here", "Who are you",
+                  "Do not go", "Does not work", "I need water",
+                  "मेरा नाम क्या है", "घर कहाँ है", "मुझे मदद"];
+const examplesEl = document.getElementById("examples");
+EXAMPLES.forEach(ex => {
+  const b = document.createElement("button");
+  b.textContent = ex;
+  b.onclick = () => { document.getElementById("textInput").value = ex; runTranslate(); };
+  examplesEl.appendChild(b);
+});
+
+let loadedVideoFiles = {}; // basename (lowercase) -> File object
+
+document.getElementById("folderInput").addEventListener("change", (e) => {
+  const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith(".mp4"));
+  loadedVideoFiles = {};
+  files.forEach(f => { loadedVideoFiles[f.name.toLowerCase()] = f; });
+  const statusEl = document.getElementById("folderStatus");
+  if (files.length === 0) {
+    statusEl.textContent = "No .mp4 files found in that selection.";
+  } else {
+    statusEl.textContent = `Loaded ${files.length} video file(s) from your selection. Videos will now play below.`;
+  }
+});
+
+function statusClass(status) {
+  return status === "complete" ? "status-complete" : status === "partial" ? "status-partial" : "status-unknown";
+}
+
+function renderResult(result) {
+  const el = document.getElementById("resultArea");
+  el.innerHTML = "";
+
+  const badge = document.createElement("span");
+  badge.className = "status-badge " + statusClass(result.status);
+  badge.textContent = result.status.toUpperCase();
+  el.appendChild(badge);
+
+  const seqLabel = document.createElement("div");
+  seqLabel.style.marginTop = "12px";
+  seqLabel.style.fontSize = "12px";
+  seqLabel.style.color = "var(--muted)";
+  seqLabel.textContent = "Gloss sequence:";
+  el.appendChild(seqLabel);
+
+  const seqWrap = document.createElement("div");
+  seqWrap.style.marginTop = "4px";
+  if (result.gloss_sequence.length === 0) {
+    seqWrap.innerHTML = '<span class="hint">(empty — nothing matched)</span>';
+  } else {
+    result.gloss_sequence.forEach(item => {
+      const chip = document.createElement("span");
+      chip.className = "gloss-chip";
+      const hasVideo = loadedVideoFiles[item.video.split("/").pop().toLowerCase()];
+      if (!hasVideo && Object.keys(loadedVideoFiles).length > 0) chip.classList.add("missing-video");
+      chip.textContent = item.gloss;
+      seqWrap.appendChild(chip);
+    });
+  }
+  el.appendChild(seqWrap);
+
+  if (result.unknown && result.unknown.length > 0) {
+    const unkLabel = document.createElement("div");
+    unkLabel.style.marginTop = "12px";
+    unkLabel.style.fontSize = "12px";
+    unkLabel.style.color = "var(--muted)";
+    unkLabel.textContent = "Unknown (no sign available):";
+    el.appendChild(unkLabel);
+
+    const unkWrap = document.createElement("div");
+    unkWrap.style.marginTop = "4px";
+    result.unknown.forEach(w => {
+      const chip = document.createElement("span");
+      chip.className = "unknown-chip";
+      chip.textContent = w;
+      unkWrap.appendChild(chip);
+    });
+    el.appendChild(unkWrap);
+  }
+}
+
+let playIndex = 0;
+let currentSequence = [];
+
+function playSequence(sequence) {
+  currentSequence = sequence;
+  playIndex = 0;
+  const playerArea = document.getElementById("playerArea");
+
+  if (sequence.length === 0) {
+    playerArea.innerHTML = '<div class="empty-state">Nothing to play — no known signs in this input.</div>';
+    return;
+  }
+  if (Object.keys(loadedVideoFiles).length === 0) {
+    playerArea.innerHTML = '<div class="empty-state">Load your dataset folder above to preview video playback. The gloss sequence above still shows what would play.</div>';
+    return;
+  }
+
+  playerArea.innerHTML = '<video id="playerVideo" autoplay></video><div class="video-label" id="playerLabel"></div>';
+  playNext();
+}
+
+function playNext() {
+  const video = document.getElementById("playerVideo");
+  const label = document.getElementById("playerLabel");
+  if (playIndex >= currentSequence.length) {
+    label.textContent = "Sequence complete.";
+    return;
+  }
+  const item = currentSequence[playIndex];
+  const basename = item.video.split("/").pop().toLowerCase();
+  const file = loadedVideoFiles[basename];
+
+  if (!file) {
+    label.textContent = `Missing video for "${item.gloss}" (expected ${item.video.split("/").pop()}) — skipping.`;
+    playIndex++;
+    setTimeout(playNext, 600);
+    return;
+  }
+
+  const url = URL.createObjectURL(file);
+  video.src = url;
+  label.textContent = `Playing: ${item.gloss} (${playIndex + 1}/${currentSequence.length})`;
+  video.onended = () => {
+    URL.revokeObjectURL(url);
+    playIndex++;
+    playNext();
+  };
+  video.play();
+}
+
+function runTranslate() {
+  const text = document.getElementById("textInput").value;
+  const lang = document.getElementById("langSelect").value;
+  const result = translate(text, lang);
+  renderResult(result);
+  document.getElementById("jsonOut").textContent = JSON.stringify(result, null, 2);
+  playSequence(result.gloss_sequence);
+}
+
+document.getElementById("translateBtn").addEventListener("click", runTranslate);
+document.getElementById("textInput").addEventListener("keydown", (e) => { if (e.key === "Enter") runTranslate(); });
+
+runTranslate();
+</script>
+</body>
+</html>
