@@ -1,0 +1,868 @@
+{
+  "0": {
+    "duration": 1.46,
+    "english": "0",
+    "video": "assets/isl/0.mp4"
+  },
+  "1": {
+    "duration": 1.46,
+    "english": "1",
+    "video": "assets/isl/1.mp4"
+  },
+  "2": {
+    "duration": 1.46,
+    "english": "2",
+    "video": "assets/isl/2.mp4"
+  },
+  "3": {
+    "duration": 1.46,
+    "english": "3",
+    "video": "assets/isl/3.mp4"
+  },
+  "4": {
+    "duration": 1.46,
+    "english": "4",
+    "video": "assets/isl/4.mp4"
+  },
+  "5": {
+    "duration": 1.46,
+    "english": "5",
+    "video": "assets/isl/5.mp4"
+  },
+  "6": {
+    "duration": 1.46,
+    "english": "6",
+    "video": "assets/isl/6.mp4"
+  },
+  "7": {
+    "duration": 1.46,
+    "english": "7",
+    "video": "assets/isl/7.mp4"
+  },
+  "8": {
+    "duration": 1.46,
+    "english": "8",
+    "video": "assets/isl/8.mp4"
+  },
+  "9": {
+    "duration": 1.46,
+    "english": "9",
+    "video": "assets/isl/9.mp4"
+  },
+  "A": {
+    "duration": 1.33,
+    "english": "a",
+    "video": "assets/isl/A.mp4"
+  },
+  "AFTER": {
+    "duration": 1.67,
+    "english": "after",
+    "hindi": "बाद",
+    "video": "assets/isl/After.mp4"
+  },
+  "AGAIN": {
+    "duration": 1.46,
+    "english": "again",
+    "hindi": "फिर",
+    "video": "assets/isl/Again.mp4"
+  },
+  "AGAINST": {
+    "duration": 1.46,
+    "english": "against",
+    "hindi": "खिलाफ",
+    "video": "assets/isl/Against.mp4"
+  },
+  "AGE": {
+    "duration": 1.71,
+    "english": "age",
+    "hindi": "उम्र",
+    "video": "assets/isl/Age.mp4"
+  },
+  "ALL": {
+    "duration": 1.67,
+    "english": "all",
+    "hindi": "सब",
+    "video": "assets/isl/All.mp4"
+  },
+  "ALONE": {
+    "duration": 1.4,
+    "english": "alone",
+    "hindi": "अकेला",
+    "video": "assets/isl/Alone.mp4"
+  },
+  "ALSO": {
+    "duration": 2.08,
+    "english": "also",
+    "hindi": "भी",
+    "video": "assets/isl/Also.mp4"
+  },
+  "AND": {
+    "duration": 1.33,
+    "english": "and",
+    "hindi": "और",
+    "video": "assets/isl/And.mp4"
+  },
+  "ASK": {
+    "duration": 1.71,
+    "english": "ask",
+    "hindi": "पूछना",
+    "video": "assets/isl/Ask.mp4"
+  },
+  "AT": {
+    "duration": 1.25,
+    "english": "at",
+    "video": "assets/isl/At.mp4"
+  },
+  "B": {
+    "duration": 1.33,
+    "english": "b",
+    "video": "assets/isl/B.mp4"
+  },
+  "BE": {
+    "duration": 1.2,
+    "english": "be",
+    "video": "assets/isl/Be.mp4"
+  },
+  "BEAUTIFUL": {
+    "duration": 1.8,
+    "english": "beautiful",
+    "hindi": "सुंदर",
+    "video": "assets/isl/Beautiful.mp4"
+  },
+  "BEFORE": {
+    "duration": 1.67,
+    "english": "before",
+    "hindi": "पहले",
+    "video": "assets/isl/Before.mp4"
+  },
+  "BEST": {
+    "duration": 1.46,
+    "english": "best",
+    "hindi": "सबसे अच्छा",
+    "video": "assets/isl/Best.mp4"
+  },
+  "BETTER": {
+    "duration": 1.46,
+    "english": "better",
+    "hindi": "बेहतर",
+    "video": "assets/isl/Better.mp4"
+  },
+  "BUSY": {
+    "duration": 1.67,
+    "english": "busy",
+    "hindi": "व्यस्त",
+    "video": "assets/isl/Busy.mp4"
+  },
+  "BUT": {
+    "duration": 1.71,
+    "english": "but",
+    "hindi": "लेकिन",
+    "video": "assets/isl/But.mp4"
+  },
+  "BYE": {
+    "duration": 1.33,
+    "english": "bye",
+    "hindi": "अलविदा",
+    "video": "assets/isl/Bye.mp4"
+  },
+  "C": {
+    "duration": 1.71,
+    "english": "c",
+    "video": "assets/isl/C.mp4"
+  },
+  "CAN": {
+    "duration": 1.25,
+    "english": "can",
+    "hindi": "सकना",
+    "video": "assets/isl/Can.mp4"
+  },
+  "CANNOT": {
+    "duration": 1.04,
+    "english": "cannot",
+    "hindi": "नहीं सकना",
+    "video": "assets/isl/Cannot.mp4"
+  },
+  "CHANGE": {
+    "duration": 1.37,
+    "english": "change",
+    "hindi": "बदलना",
+    "video": "assets/isl/Change.mp4"
+  },
+  "COLLEGE": {
+    "duration": 1.5,
+    "english": "college",
+    "hindi": "कॉलेज",
+    "video": "assets/isl/College.mp4"
+  },
+  "COME": {
+    "duration": 1.87,
+    "english": "come",
+    "hindi": "आओ",
+    "video": "assets/isl/Come.mp4"
+  },
+  "COMPUTER": {
+    "duration": 2.5,
+    "english": "computer",
+    "hindi": "कंप्यूटर",
+    "video": "assets/isl/Computer.mp4"
+  },
+  "D": {
+    "duration": 1.67,
+    "english": "d",
+    "video": "assets/isl/D.mp4"
+  },
+  "DAY": {
+    "duration": 1.03,
+    "english": "day",
+    "hindi": "दिन",
+    "video": "assets/isl/Day.mp4"
+  },
+  "DISTANCE": {
+    "duration": 1.29,
+    "english": "distance",
+    "hindi": "दूरी",
+    "video": "assets/isl/Distance.mp4"
+  },
+  "DO": {
+    "duration": 1.67,
+    "english": "do",
+    "hindi": "करना",
+    "video": "assets/isl/Do.mp4"
+  },
+  "DOES_NOT": {
+    "duration": 1.25,
+    "english": "does not",
+    "hindi": "नहीं करता",
+    "video": "assets/isl/Does Not.mp4"
+  },
+  "DO_NOT": {
+    "duration": 1.03,
+    "english": "do not",
+    "hindi": "मत करो",
+    "video": "assets/isl/Do Not.mp4"
+  },
+  "E": {
+    "duration": 1.71,
+    "english": "e",
+    "video": "assets/isl/E.mp4"
+  },
+  "EAT": {
+    "duration": 1.71,
+    "english": "eat",
+    "hindi": "खाना",
+    "video": "assets/isl/Eat.mp4"
+  },
+  "ENGINEER": {
+    "duration": 1.46,
+    "english": "engineer",
+    "hindi": "इंजीनियर",
+    "video": "assets/isl/Engineer.mp4"
+  },
+  "F": {
+    "duration": 1.71,
+    "english": "f",
+    "video": "assets/isl/F.mp4"
+  },
+  "FIGHT": {
+    "duration": 1.67,
+    "english": "fight",
+    "hindi": "लड़ना",
+    "video": "assets/isl/Fight.mp4"
+  },
+  "FINISH": {
+    "duration": 1.58,
+    "english": "finish",
+    "hindi": "खत्म",
+    "video": "assets/isl/Finish.mp4"
+  },
+  "FROM": {
+    "duration": 1.67,
+    "english": "from",
+    "hindi": "से",
+    "video": "assets/isl/From.mp4"
+  },
+  "G": {
+    "duration": 1.67,
+    "english": "g",
+    "video": "assets/isl/G.mp4"
+  },
+  "GLITTER": {
+    "duration": 1.28,
+    "english": "glitter",
+    "video": "assets/isl/Glitter.mp4"
+  },
+  "GO": {
+    "duration": 1.0,
+    "english": "go",
+    "hindi": "जाओ",
+    "video": "assets/isl/Go.mp4"
+  },
+  "GOD": {
+    "duration": 1.87,
+    "english": "god",
+    "hindi": "भगवान",
+    "video": "assets/isl/God.mp4"
+  },
+  "GOLD": {
+    "duration": 1.33,
+    "english": "gold",
+    "hindi": "सोना",
+    "video": "assets/isl/Gold.mp4"
+  },
+  "GOOD": {
+    "duration": 1.43,
+    "english": "good",
+    "hindi": "अच्छा",
+    "video": "assets/isl/Good.mp4"
+  },
+  "GREAT": {
+    "duration": 1.8,
+    "english": "great",
+    "hindi": "महान",
+    "video": "assets/isl/Great.mp4"
+  },
+  "H": {
+    "duration": 1.71,
+    "english": "h",
+    "video": "assets/isl/H.mp4"
+  },
+  "HAND": {
+    "duration": 1.37,
+    "english": "hand",
+    "hindi": "हाथ",
+    "video": "assets/isl/Hand.mp4"
+  },
+  "HANDS": {
+    "duration": 1.37,
+    "english": "hands",
+    "hindi": "हाथ",
+    "video": "assets/isl/Hands.mp4"
+  },
+  "HAPPY": {
+    "duration": 1.67,
+    "english": "happy",
+    "hindi": "खुश",
+    "video": "assets/isl/Happy.mp4"
+  },
+  "HELLO": {
+    "duration": 1.29,
+    "english": "hello",
+    "hindi": "नमस्ते",
+    "video": "assets/isl/Hello.mp4"
+  },
+  "HELP": {
+    "duration": 1.67,
+    "english": "help",
+    "hindi": "मदद",
+    "video": "assets/isl/Help.mp4"
+  },
+  "HER": {
+    "duration": 1.67,
+    "english": "her",
+    "hindi": "उसकी",
+    "video": "assets/isl/Her.mp4"
+  },
+  "HERE": {
+    "duration": 1.67,
+    "english": "here",
+    "hindi": "यहाँ",
+    "video": "assets/isl/Here.mp4"
+  },
+  "HIS": {
+    "duration": 1.87,
+    "english": "his",
+    "hindi": "उसका",
+    "video": "assets/isl/His.mp4"
+  },
+  "HOME": {
+    "duration": 1.29,
+    "english": "home",
+    "hindi": "घर",
+    "video": "assets/isl/Home.mp4"
+  },
+  "HOMEPAGE": {
+    "duration": 1.87,
+    "english": "homepage",
+    "video": "assets/isl/Homepage.mp4"
+  },
+  "HOW": {
+    "duration": 1.25,
+    "english": "how",
+    "hindi": "कैसे",
+    "video": "assets/isl/How.mp4"
+  },
+  "I": {
+    "duration": 1.67,
+    "english": "i",
+    "hindi": "मैं",
+    "video": "assets/isl/I.mp4"
+  },
+  "INVENT": {
+    "duration": 1.37,
+    "english": "invent",
+    "video": "assets/isl/Invent.mp4"
+  },
+  "IT": {
+    "duration": 1.46,
+    "english": "it",
+    "hindi": "इसे",
+    "video": "assets/isl/It.mp4"
+  },
+  "J": {
+    "duration": 2.5,
+    "english": "j",
+    "video": "assets/isl/J.mp4"
+  },
+  "K": {
+    "duration": 1.67,
+    "english": "k",
+    "video": "assets/isl/K.mp4"
+  },
+  "KEEP": {
+    "duration": 1.25,
+    "english": "keep",
+    "hindi": "रखना",
+    "video": "assets/isl/Keep.mp4"
+  },
+  "L": {
+    "duration": 1.33,
+    "english": "l",
+    "video": "assets/isl/L.mp4"
+  },
+  "LANGUAGE": {
+    "duration": 2.08,
+    "english": "language",
+    "hindi": "भाषा",
+    "video": "assets/isl/Language.mp4"
+  },
+  "LAUGH": {
+    "duration": 2.08,
+    "english": "laugh",
+    "hindi": "हँसना",
+    "video": "assets/isl/Laugh.mp4"
+  },
+  "LEARN": {
+    "duration": 1.33,
+    "english": "learn",
+    "hindi": "सीखना",
+    "video": "assets/isl/Learn.mp4"
+  },
+  "M": {
+    "duration": 1.67,
+    "english": "m",
+    "video": "assets/isl/M.mp4"
+  },
+  "ME": {
+    "duration": 1.46,
+    "english": "me",
+    "hindi": "मुझे",
+    "video": "assets/isl/ME.mp4"
+  },
+  "MORE": {
+    "duration": 1.29,
+    "english": "more",
+    "hindi": "ज्यादा",
+    "video": "assets/isl/More.mp4"
+  },
+  "MY": {
+    "duration": 1.08,
+    "english": "my",
+    "hindi": "मेरा",
+    "video": "assets/isl/My.mp4"
+  },
+  "N": {
+    "duration": 1.67,
+    "english": "n",
+    "video": "assets/isl/N.mp4"
+  },
+  "NAME": {
+    "duration": 1.67,
+    "english": "name",
+    "hindi": "नाम",
+    "video": "assets/isl/Name.mp4"
+  },
+  "NEXT": {
+    "duration": 1.46,
+    "english": "next",
+    "hindi": "अगला",
+    "video": "assets/isl/Next.mp4"
+  },
+  "NOT": {
+    "duration": 1.24,
+    "english": "not",
+    "hindi": "नहीं",
+    "video": "assets/isl/Not.mp4"
+  },
+  "NOW": {
+    "duration": 1.25,
+    "english": "now",
+    "hindi": "अभी",
+    "video": "assets/isl/Now.mp4"
+  },
+  "O": {
+    "duration": 1.67,
+    "english": "o",
+    "video": "assets/isl/O.mp4"
+  },
+  "OF": {
+    "duration": 2.08,
+    "english": "of",
+    "hindi": "का",
+    "video": "assets/isl/Of.mp4"
+  },
+  "ON": {
+    "duration": 1.87,
+    "english": "on",
+    "hindi": "पर",
+    "video": "assets/isl/On.mp4"
+  },
+  "OUR": {
+    "duration": 1.5,
+    "english": "our",
+    "hindi": "हमारा",
+    "video": "assets/isl/Our.mp4"
+  },
+  "OUT": {
+    "duration": 1.46,
+    "english": "out",
+    "hindi": "बाहर",
+    "video": "assets/isl/Out.mp4"
+  },
+  "P": {
+    "duration": 1.67,
+    "english": "p",
+    "video": "assets/isl/P.mp4"
+  },
+  "PRETTY": {
+    "duration": 1.8,
+    "english": "pretty",
+    "hindi": "प्यारा",
+    "video": "assets/isl/Pretty.mp4"
+  },
+  "Q": {
+    "duration": 1.67,
+    "english": "q",
+    "video": "assets/isl/Q.mp4"
+  },
+  "R": {
+    "duration": 1.67,
+    "english": "r",
+    "video": "assets/isl/R.mp4"
+  },
+  "RIGHT": {
+    "duration": 1.67,
+    "english": "right",
+    "hindi": "सही",
+    "video": "assets/isl/Right.mp4"
+  },
+  "S": {
+    "duration": 1.67,
+    "english": "s",
+    "video": "assets/isl/S.mp4"
+  },
+  "SAD": {
+    "duration": 1.71,
+    "english": "sad",
+    "hindi": "उदास",
+    "video": "assets/isl/Sad.mp4"
+  },
+  "SAFE": {
+    "duration": 1.33,
+    "english": "safe",
+    "hindi": "सुरक्षित",
+    "video": "assets/isl/Safe.mp4"
+  },
+  "SEE": {
+    "duration": 1.17,
+    "english": "see",
+    "hindi": "देखना",
+    "video": "assets/isl/See.mp4"
+  },
+  "SELF": {
+    "duration": 1.17,
+    "english": "self",
+    "hindi": "स्वयं",
+    "video": "assets/isl/Self.mp4"
+  },
+  "SIGN": {
+    "duration": 1.6,
+    "english": "sign",
+    "hindi": "इशारा",
+    "video": "assets/isl/Sign.mp4"
+  },
+  "SING": {
+    "duration": 1.67,
+    "english": "sing",
+    "hindi": "गाना",
+    "video": "assets/isl/Sing.mp4"
+  },
+  "SO": {
+    "duration": 0.83,
+    "english": "so",
+    "hindi": "इसलिए",
+    "video": "assets/isl/So.mp4"
+  },
+  "SOUND": {
+    "duration": 1.67,
+    "english": "sound",
+    "hindi": "आवाज़",
+    "video": "assets/isl/Sound.mp4"
+  },
+  "STAY": {
+    "duration": 2.29,
+    "english": "stay",
+    "hindi": "ठहरना",
+    "video": "assets/isl/Stay.mp4"
+  },
+  "STUDY": {
+    "duration": 1.29,
+    "english": "study",
+    "hindi": "पढ़ाई",
+    "video": "assets/isl/Study.mp4"
+  },
+  "T": {
+    "duration": 1.67,
+    "english": "t",
+    "video": "assets/isl/T.mp4"
+  },
+  "TALK": {
+    "duration": 1.67,
+    "english": "talk",
+    "hindi": "बात करना",
+    "video": "assets/isl/Talk.mp4"
+  },
+  "TELEVISION": {
+    "duration": 1.67,
+    "english": "television",
+    "hindi": "टेलीविजन",
+    "video": "assets/isl/Television.mp4"
+  },
+  "THANK": {
+    "duration": 1.67,
+    "english": "thank",
+    "hindi": "धन्यवाद",
+    "video": "assets/isl/Thank.mp4"
+  },
+  "THANK_YOU": {
+    "duration": 1.67,
+    "english": "thank you",
+    "hindi": "धन्यवाद",
+    "video": "assets/isl/Thank You.mp4"
+  },
+  "THAT": {
+    "duration": 1.23,
+    "english": "that",
+    "hindi": "वह",
+    "video": "assets/isl/That.mp4"
+  },
+  "THEY": {
+    "duration": 1.67,
+    "english": "they",
+    "hindi": "वे",
+    "video": "assets/isl/They.mp4"
+  },
+  "THIS": {
+    "duration": 1.46,
+    "english": "this",
+    "hindi": "यह",
+    "video": "assets/isl/This.mp4"
+  },
+  "THOSE": {
+    "duration": 1.67,
+    "english": "those",
+    "hindi": "वे सब",
+    "video": "assets/isl/Those.mp4"
+  },
+  "TIME": {
+    "duration": 1.07,
+    "english": "time",
+    "hindi": "समय",
+    "video": "assets/isl/Time.mp4"
+  },
+  "TO": {
+    "duration": 1.79,
+    "english": "to",
+    "hindi": "को",
+    "video": "assets/isl/To.mp4"
+  },
+  "TYPE": {
+    "duration": 1.87,
+    "english": "type",
+    "hindi": "टाइप करना",
+    "video": "assets/isl/Type.mp4"
+  },
+  "U": {
+    "duration": 1.67,
+    "english": "u",
+    "video": "assets/isl/U.mp4"
+  },
+  "US": {
+    "duration": 1.87,
+    "english": "us",
+    "hindi": "हमें",
+    "video": "assets/isl/Us.mp4"
+  },
+  "V": {
+    "duration": 1.67,
+    "english": "v",
+    "video": "assets/isl/V.mp4"
+  },
+  "W": {
+    "duration": 1.67,
+    "english": "w",
+    "video": "assets/isl/W.mp4"
+  },
+  "WALK": {
+    "duration": 1.87,
+    "english": "walk",
+    "hindi": "चलना",
+    "video": "assets/isl/Walk.mp4"
+  },
+  "WASH": {
+    "duration": 1.58,
+    "english": "wash",
+    "hindi": "धोना",
+    "video": "assets/isl/Wash.mp4"
+  },
+  "WAY": {
+    "duration": 1.5,
+    "english": "way",
+    "hindi": "रास्ता",
+    "video": "assets/isl/Way.mp4"
+  },
+  "WE": {
+    "duration": 1.5,
+    "english": "we",
+    "hindi": "हम",
+    "video": "assets/isl/We.mp4"
+  },
+  "WELCOME": {
+    "duration": 1.46,
+    "english": "welcome",
+    "hindi": "स्वागत",
+    "video": "assets/isl/Welcome.mp4"
+  },
+  "WHAT": {
+    "duration": 1.25,
+    "english": "what",
+    "hindi": "क्या",
+    "video": "assets/isl/What.mp4"
+  },
+  "WHEN": {
+    "duration": 1.87,
+    "english": "when",
+    "hindi": "कब",
+    "video": "assets/isl/When.mp4"
+  },
+  "WHERE": {
+    "duration": 1.46,
+    "english": "where",
+    "hindi": "कहाँ",
+    "video": "assets/isl/Where.mp4"
+  },
+  "WHICH": {
+    "duration": 1.67,
+    "english": "which",
+    "hindi": "कौन सा",
+    "video": "assets/isl/Which.mp4"
+  },
+  "WHO": {
+    "duration": 2.29,
+    "english": "who",
+    "hindi": "कौन",
+    "video": "assets/isl/Who.mp4"
+  },
+  "WHOLE": {
+    "duration": 1.67,
+    "english": "whole",
+    "hindi": "पूरा",
+    "video": "assets/isl/Whole.mp4"
+  },
+  "WHOSE": {
+    "duration": 1.67,
+    "english": "whose",
+    "hindi": "किसका",
+    "video": "assets/isl/Whose.mp4"
+  },
+  "WHY": {
+    "duration": 1.25,
+    "english": "why",
+    "hindi": "क्यों",
+    "video": "assets/isl/Why.mp4"
+  },
+  "WILL": {
+    "duration": 1.5,
+    "english": "will",
+    "hindi": "करेंगे",
+    "video": "assets/isl/Will.mp4"
+  },
+  "WITH": {
+    "duration": 1.67,
+    "english": "with",
+    "hindi": "साथ",
+    "video": "assets/isl/With.mp4"
+  },
+  "WITHOUT": {
+    "duration": 1.67,
+    "english": "without",
+    "hindi": "बिना",
+    "video": "assets/isl/Without.mp4"
+  },
+  "WORDS": {
+    "duration": 1.04,
+    "english": "words",
+    "hindi": "शब्द",
+    "video": "assets/isl/Words.mp4"
+  },
+  "WORK": {
+    "duration": 1.67,
+    "english": "work",
+    "hindi": "काम",
+    "video": "assets/isl/Work.mp4"
+  },
+  "WORLD": {
+    "duration": 2.08,
+    "english": "world",
+    "hindi": "दुनिया",
+    "video": "assets/isl/World.mp4"
+  },
+  "WRONG": {
+    "duration": 1.67,
+    "english": "wrong",
+    "hindi": "गलत",
+    "video": "assets/isl/Wrong.mp4"
+  },
+  "X": {
+    "duration": 1.67,
+    "english": "x",
+    "video": "assets/isl/X.mp4"
+  },
+  "Y": {
+    "duration": 1.67,
+    "english": "y",
+    "video": "assets/isl/Y.mp4"
+  },
+  "YOU": {
+    "duration": 1.25,
+    "english": "you",
+    "hindi": "तुम",
+    "video": "assets/isl/You.mp4"
+  },
+  "YOUR": {
+    "duration": 1.79,
+    "english": "your",
+    "hindi": "तुम्हारा",
+    "video": "assets/isl/Your.mp4"
+  },
+  "YOURSELF": {
+    "duration": 2.5,
+    "english": "yourself",
+    "hindi": "खुद",
+    "video": "assets/isl/Yourself.mp4"
+  },
+  "Z": {
+    "duration": 2.03,
+    "english": "z",
+    "video": "assets/isl/Z.mp4"
+  }
+}

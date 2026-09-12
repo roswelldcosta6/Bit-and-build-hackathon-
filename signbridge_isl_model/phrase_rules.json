@@ -1,0 +1,51 @@
+{
+  "_comment": "Level 1 exact-phrase rules. Keys are normalized (lowercase, punctuation stripped) input phrases. Values are gloss sequences. Every gloss listed here has been verified to exist in isl_dictionary.json — do not add a rule that references a gloss not present there.",
+
+  "hello": ["HELLO"],
+  "hi": ["HELLO"],
+  "hey": ["HELLO"],
+
+  "bye": ["BYE"],
+  "goodbye": ["BYE"],
+  "good bye": ["BYE"],
+  "see you": ["BYE"],
+  "see you later": ["BYE"],
+
+  "thank you": ["THANK_YOU"],
+  "thanks": ["THANK_YOU"],
+  "many thanks": ["THANK_YOU"],
+
+  "welcome": ["WELCOME"],
+  "you are welcome": ["WELCOME"],
+
+  "help": ["HELP"],
+  "help me": ["HELP", "ME"],
+  "can you help me": ["CAN", "YOU", "HELP", "ME"],
+  "i need help": ["I", "HELP"],
+
+  "where is home": ["WHERE", "HOME"],
+  "where are you": ["WHERE", "YOU"],
+  "where are you going": ["WHERE", "YOU", "GO"],
+
+  "what is your name": ["WHAT", "YOUR", "NAME"],
+  "what is this": ["WHAT", "THIS"],
+  "what is that": ["WHAT", "THAT"],
+
+  "who are you": ["WHO", "YOU"],
+  "who is this": ["WHO", "THIS"],
+
+  "come here": ["COME", "HERE"],
+  "go now": ["GO", "NOW"],
+  "go home": ["GO", "HOME"],
+  "do not go": ["DO_NOT", "GO"],
+  "does not work": ["DOES_NOT", "WORK"],
+
+  "i am busy": ["I", "BUSY"],
+  "i am fine": ["I", "GOOD"],
+  "how are you": ["HOW", "YOU"],
+
+  "good work": ["GOOD", "WORK"],
+
+  "my name": ["MY", "NAME"],
+  "your name": ["YOUR", "NAME"]
+}
