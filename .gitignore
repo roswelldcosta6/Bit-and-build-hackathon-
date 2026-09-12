@@ -18,5 +18,13 @@ backend/temp_audio/
 .DS_Store
 Thumbs.db
 
+# Build and binary artifacts
+*.apk
+*.aab
+build/
+.dart_tool/
+.gradle/
+*.log
+
 # Freebuff workspace metadata
 .freebuff/

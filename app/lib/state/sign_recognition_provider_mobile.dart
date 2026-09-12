@@ -104,42 +104,58 @@ base class SignRecognitionNotifier extends SignRecognitionNotifierBase {
       final result = _tfliteService.addFrame(keypoints);
       if (result == null || _disposed) return;
 
-      final newSentence = [...state.sentence, result];
-      final sentenceEn = newSentence.map((r) => r.labelEn).join(' ');
-      final sentenceHi = newSentence.map((r) => r.labelHi).join(' ');
+      if (result.isStable) {
+        final lastGloss = state.sentence.isNotEmpty ? state.sentence.last.gloss : null;
+        if (lastGloss != result.gloss) {
+          final newSentence = [...state.sentence, result];
+          final sentenceEn = newSentence.map((r) => r.labelEn).join(' ');
+          final sentenceHi = newSentence.map((r) => r.labelHi).join(' ');
 
-      state = state.copyWith(
-        currentResult: result,
-        sentence: newSentence,
-        sentenceEn: sentenceEn,
-        sentenceHi: sentenceHi,
-        confidence: result.confidence,
-      );
+          state = state.copyWith(
+            currentResult: result,
+            sentence: newSentence,
+            sentenceEn: sentenceEn,
+            sentenceHi: sentenceHi,
+            confidence: result.confidence,
+          );
 
-      // Speak the recognized sign aloud (best-effort, never blocks frames).
-      unawaited(
-        _ttsService?.speakSign(
-          textEn: result.labelEn,
-          textHi: result.labelHi,
-        ),
-      );
+          // Speak the recognized sign aloud (best-effort, never blocks frames).
+          unawaited(
+            _ttsService?.speakSign(
+              textEn: result.labelEn,
+              textHi: result.labelHi,
+            ),
+          );
 
-      // Log to backend history (fire-and-forget; guests/offline are fine).
-      ApiService? api;
-      try {
-        api = ref.read(apiServiceProvider);
-      } catch (_) {}
-      if (api != null) {
-        unawaited(
-          api
-              .addHistoryEntry(
-                mode: 'MODE_A',
-                inputContent: 'Sign: ${result.gloss}',
-                outputContent: '${result.labelEn} / ${result.labelHi}',
-                detectedLang: 'isl',
-                glosses: [result.gloss],
-              )
-              .catchError((_) {}),
+          // Log to backend history (fire-and-forget; guests/offline are fine).
+          ApiService? api;
+          try {
+            api = ref.read(apiServiceProvider);
+          } catch (_) {}
+          if (api != null) {
+            unawaited(
+              api
+                  .addHistoryEntry(
+                    mode: 'MODE_A',
+                    inputContent: 'Sign: ${result.gloss}',
+                    outputContent: '${result.labelEn} / ${result.labelHi}',
+                    detectedLang: 'isl',
+                    glosses: [result.gloss],
+                  )
+                  .catchError((_) {}),
+            );
+          }
+        } else {
+          state = state.copyWith(
+            currentResult: result,
+            confidence: result.confidence,
+          );
+        }
+      } else {
+        // Real-time live prediction feedback on every frame
+        state = state.copyWith(
+          currentResult: result,
+          confidence: result.confidence,
         );
       }
     } catch (e) {
