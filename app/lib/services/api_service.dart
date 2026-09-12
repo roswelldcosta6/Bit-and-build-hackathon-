@@ -10,6 +10,13 @@ final apiServiceProvider = Provider<ApiService>(
   (ref) => ApiService(ref.watch(settingsProvider).apiBaseUrl),
 );
 
+/// Signals that the caller is signed in as a guest (no account).
+class GuestModeException implements Exception {
+  const GuestModeException();
+  @override
+  String toString() => 'Guest mode: not signed in.';
+}
+
 class ApiService {
   ApiService(String baseUrl)
     : _dio = Dio(
@@ -20,6 +27,55 @@ class ApiService {
         ),
       );
   final Dio _dio;
+
+  /// Attaches the current bearer token to every request, when signed in.
+  void setAuthToken(String? token) {
+    _dio.options.headers['Authorization'] =
+        (token == null || token.isEmpty) ? null : 'Bearer $token';
+  }
+
+  // ------------------------------------------------------------------
+  // Authentication
+  // ------------------------------------------------------------------
+  Future<AuthResult> register({
+    required String email,
+    required String password,
+    required String fullName,
+    required String role,
+    required String preferredLang,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/register',
+      data: {
+        'email': email,
+        'password': password,
+        'full_name': fullName,
+        'role': role,
+        'preferred_lang': preferredLang,
+      },
+    );
+    return AuthResult.fromJson(response.data!);
+  }
+
+  Future<AuthResult> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/login',
+      data: {'email': email, 'password': password},
+    );
+    return AuthResult.fromJson(response.data!);
+  }
+
+  Future<UserProfile> me() async {
+    final response = await _dio.get<Map<String, dynamic>>('/auth/me');
+    return UserProfile.fromJson(response.data!);
+  }
+
+  // ------------------------------------------------------------------
+  // Translation
+  // ------------------------------------------------------------------
   Future<TranslationResult> translateText(String text) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/text-to-isl',

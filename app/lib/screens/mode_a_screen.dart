@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../theme/app_theme.dart';
-
 class ModeAScreen extends StatefulWidget {
   const ModeAScreen({super.key});
   @override
@@ -83,7 +81,7 @@ class _ModeAScreenState extends State<ModeAScreen> {
         if (_sentence.isNotEmpty)
           IconButton(
             tooltip: 'Clear sentence',
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh),
             onPressed: _clearSentence,
           ),
       ],
@@ -138,9 +136,6 @@ class _ModeAScreenState extends State<ModeAScreen> {
 
           // Bilingual Recognition Card
           Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
@@ -148,7 +143,11 @@ class _ModeAScreenState extends State<ModeAScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.auto_awesome, color: AppTheme.mint, size: 20),
+                      Icon(
+                        Icons.auto_awesome_outlined,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Live translation',
@@ -159,7 +158,9 @@ class _ModeAScreenState extends State<ModeAScreen> {
                       Text(
                         _running ? '${(_confidence * 100).toInt()}% match' : 'Waiting',
                         style: TextStyle(
-                          color: _running ? AppTheme.mint : null,
+                          color: _running
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -194,7 +195,7 @@ class _ModeAScreenState extends State<ModeAScreen> {
                         IconButton.filledTonal(
                           tooltip: 'Speak Aloud (TTS)',
                           onPressed: _speakTTS,
-                          icon: const Icon(Icons.volume_up_rounded),
+                          icon: const Icon(Icons.volume_up_outlined),
                         ),
                     ],
                   ),
@@ -202,7 +203,7 @@ class _ModeAScreenState extends State<ModeAScreen> {
                   LinearProgressIndicator(
                     value: _confidence,
                     minHeight: 6,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.zero,
                   ),
                 ],
               ),
@@ -218,9 +219,6 @@ class _ModeAScreenState extends State<ModeAScreen> {
           ),
           const SizedBox(height: 6),
           Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: _sentence.isEmpty
@@ -255,14 +253,14 @@ class _ModeAScreenState extends State<ModeAScreen> {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: _nextDemo,
-                  icon: const Icon(Icons.play_arrow_rounded),
+                  icon: const Icon(Icons.play_arrow),
                   label: const Text('Simulate Next Sign'),
                 ),
               ),
               const SizedBox(width: 8),
               FilledButton.tonalIcon(
                 onPressed: _running ? _speakTTS : null,
-                icon: const Icon(Icons.record_voice_over_rounded),
+                icon: const Icon(Icons.record_voice_over_outlined),
                 label: const Text('Speak'),
               ),
             ],
@@ -280,7 +278,7 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
       color: Colors.black54,
-      borderRadius: BorderRadius.circular(40),
+      borderRadius: BorderRadius.zero,
     ),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -290,7 +288,7 @@ class _StatusPill extends StatelessWidget {
           Icon(
             active ? Icons.circle : Icons.pause_circle_outline,
             size: 12,
-            color: active ? const Color(0xFF76E1B3) : Colors.white,
+            color: active ? Colors.white : Colors.white60,
           ),
           const SizedBox(width: 6),
           Text(

@@ -1,0 +1,6 @@
+# For testing model_best.pth (see test_model.py) — heavy deps, not needed by the FastAPI backend
+torch>=2.2
+transformers>=4.40
+sentencepiece
+pillow
+numpy

@@ -55,7 +55,17 @@ class _HistoryTile extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 12),
     child: ListTile(
       contentPadding: const EdgeInsets.all(16),
-      leading: CircleAvatar(child: Icon(icon)),
+      leading: Container(
+        width: 42,
+        height: 42,
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .1),
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          size: 21,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 5),

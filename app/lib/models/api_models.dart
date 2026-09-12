@@ -42,6 +42,41 @@ class TranslationResult {
       );
 }
 
+class UserProfile {
+  const UserProfile({
+    required this.userId,
+    required this.email,
+    required this.fullName,
+    required this.role,
+    required this.preferredLang,
+    required this.createdAt,
+  });
+  final String userId;
+  final String email;
+  final String fullName;
+  final String role;
+  final String preferredLang;
+  final String createdAt;
+  factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
+    userId: json['user_id'] as String,
+    email: json['email'] as String,
+    fullName: json['full_name'] as String,
+    role: json['role'] as String? ?? 'deaf_user',
+    preferredLang: json['preferred_lang'] as String? ?? 'en',
+    createdAt: json['created_at'] as String? ?? '',
+  );
+}
+
+class AuthResult {
+  const AuthResult({required this.token, required this.user});
+  final String token;
+  final UserProfile user;
+  factory AuthResult.fromJson(Map<String, dynamic> json) => AuthResult(
+    token: json['token'] as String,
+    user: UserProfile.fromJson(json['user'] as Map<String, dynamic>),
+  );
+}
+
 class SkeletalPose {
   const SkeletalPose({
     required this.gloss,
