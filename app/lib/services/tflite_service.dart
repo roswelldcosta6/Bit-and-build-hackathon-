@@ -18,6 +18,7 @@ class TfliteService {
   // Sliding window: collect 30 frames, then run inference on every new frame.
   static const int _windowSize = 30;
   static const int _keypointSize = 63; // 21 landmarks x 3 coords
+  static const double _confidenceThreshold = 0.08;
   static const int _stabilityWindow = 2; // stable for 2 consecutive runs
 
   final List<List<double>> _frameBuffer = [];
