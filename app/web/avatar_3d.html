@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignBridge 3D Sign Language Avatar</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #viewport {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at 50% 30%, #ffffff 0%, #f1f3f5 100%);
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    
+    #badge {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+    #badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+    }
+
+    #controls {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    .ctrl-btn {
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
+    .ctrl-btn:hover { background: #f1f5f9; }
+
+    #subtitle-bar {
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 16px 20px;
+      text-align: center;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.03);
+    }
+    #subtitle-text {
+      font-size: 26px;
+      font-weight: 900;
+      color: #1a1a1a;
+      letter-spacing: -0.5px;
+    }
+    #subtitle-meta {
+      margin-top: 4px;
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .gloss-tag {
+      background: #f1f5f9;
+      color: #334155;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    #chips-bar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #f8fafc;
+      overflow-x: auto;
+      border-top: 1px solid #e2e8f0;
+      justify-content: center;
+    }
+    .chip {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .chip:hover {
+      background: #c85a32;
+      color: #ffffff;
+      border-color: #c85a32;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="badge">
+    <div id="badge-dot"></div>
+    <span>3D SIGN LANGUAGE AVATAR</span>
+  </div>
+
+  <div id="controls">
+    <button class="ctrl-btn" onclick="playInitialHello()">👋 Initial Hello</button>
+    <button class="ctrl-btn" onclick="togglePause()" id="pause-btn">⏸ Pause</button>
+  </div>
+</div>
+
+<div id="subtitle-bar">
+  <div id="subtitle-text">Hello</div>
+  <div id="subtitle-meta">
+    <span id="hindi-text">नमस्ते</span>
+    <span class="gloss-tag" id="gloss-text">HELLO</span>
+  </div>
+</div>
+
+<div id="chips-bar">
+  <button class="chip" onclick="sequenceGlosses(['HELLO'])">👋 Hello</button>
+  <button class="chip" onclick="sequenceGlosses(['HOSPITAL', 'WHERE'])">🏥 Hospital Where?</button>
+  <button class="chip" onclick="sequenceGlosses(['DOCTOR', 'PLEASE'])">👨‍⚕️ Doctor Please</button>
+  <button class="chip" onclick="sequenceGlosses(['HELP'])">🆘 Help</button>
+  <button class="chip" onclick="sequenceGlosses(['WATER', 'WANT'])">💧 Water Want</button>
+  <button class="chip" onclick="sequenceGlosses(['MEDICINE'])">💊 Medicine</button>
+  <button class="chip" onclick="sequenceGlosses(['THANK_YOU'])">🙏 Thank You</button>
+</div>
+
+<script>
+  // Setup Three.js Scene
+  const viewport = document.getElementById('viewport');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xfafafb);
+
+  const camera = new THREE.PerspectiveCamera(38, viewport.clientWidth / viewport.clientHeight, 0.1, 50);
+  camera.position.set(0, 1.30, 2.7);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  viewport.appendChild(renderer.domElement);
+
+  // Soft Studio Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+  scene.add(ambientLight);
+
+  const keyLight = new THREE.DirectionalLight(0xfff5ea, 0.9);
+  keyLight.position.set(2, 4, 3);
+  keyLight.castShadow = true;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0xe0f2fe, 0.5);
+  fillLight.position.set(-2, 2, 2);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xffedd5, 0.4);
+  rimLight.position.set(0, 3, -3);
+  scene.add(rimLight);
+
+  // Contact Floor Shadow
+  const shadowGeo = new THREE.PlaneGeometry(1.4, 0.6);
+  const shadowMat = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    transparent: true,
+    opacity: 0.12,
+  });
+  const shadowPlane = new THREE.Mesh(shadowGeo, shadowMat);
+  shadowPlane.rotation.x = -Math.PI / 2;
+  shadowPlane.position.set(0, 0.35, 0);
+  scene.add(shadowPlane);
+
+  // Material Palettes matching Visual Requirements:
+  // - Terracotta crew-neck shirt
+  // - Dark brown belt
+  // - Navy blue jeans
+  // - Short brown hair
+  const skinMat = new THREE.MeshStandardMaterial({ color: 0xf3c7a8, roughness: 0.5 });
+  const hairMat = new THREE.MeshStandardMaterial({ color: 0x442614, roughness: 0.6 });
+  const shirtMat = new THREE.MeshStandardMaterial({ color: 0xc85a32, roughness: 0.6 });
+  const beltMat = new THREE.MeshStandardMaterial({ color: 0x351c0e, roughness: 0.4 });
+  const buckleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.8, roughness: 0.2 });
+  const jeansMat = new THREE.MeshStandardMaterial({ color: 0x1e2d4a, roughness: 0.7 });
+  const shoeMat = new THREE.MeshStandardMaterial({ color: 0x262626, roughness: 0.5 });
+
+  const avatar = new THREE.Group();
+  scene.add(avatar);
+
+  // 1. Head & Short Brown Hair
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 1.68, 0);
+  avatar.add(headGroup);
+
+  const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.12, 32, 32), skinMat);
+  headGroup.add(headMesh);
+
+  // Hair Cap & Fringe
+  const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.126, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
+  hairCap.position.set(0, 0.01, -0.01);
+  headGroup.add(hairCap);
+
+  // Hair Fringe volume
+  const fringeGeo = new THREE.BoxGeometry(0.14, 0.04, 0.05);
+  const fringe = new THREE.Mesh(fringeGeo, hairMat);
+  fringe.position.set(0, 0.08, 0.10);
+  fringe.rotation.x = 0.2;
+  headGroup.add(fringe);
+
+  // Neck
+  const neckMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.08, 16), skinMat);
+  neckMesh.position.set(0, 1.54, 0);
+  avatar.add(neckMesh);
+
+  // 2. Torso (Terracotta Crew-Neck Shirt)
+  const chestMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.15, 0.38, 20), shirtMat);
+  chestMesh.position.set(0, 1.30, 0);
+  avatar.add(chestMesh);
+
+  // Crew neck collar rim
+  const collarMesh = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.012, 8, 24), shirtMat);
+  collarMesh.rotation.x = Math.PI / 2;
+  collarMesh.position.set(0, 1.49, 0.01);
+  avatar.add(collarMesh);
+
+  // 3. Dark Brown Belt & Silver Buckle
+  const beltMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.152, 0.045, 20), beltMat);
+  beltMesh.position.set(0, 1.09, 0);
+  avatar.add(beltMesh);
+
+  const buckleMesh = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.02), buckleMat);
+  buckleMesh.position.set(0, 1.09, 0.15);
+  avatar.add(buckleMesh);
+
+  // 4. Navy Blue Jeans (Legs)
+  function makeLeg(x) {
+    const leg = new THREE.Group();
+    leg.position.set(x, 1.06, 0);
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.055, 0.36, 16), jeansMat);
+    upper.position.y = -0.18;
+    leg.add(upper);
+    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.048, 0.34, 16), jeansMat);
+    lower.position.y = -0.48;
+    leg.add(lower);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.16), shoeMat);
+    shoe.position.set(0, -0.66, 0.03);
+    leg.add(shoe);
+    avatar.add(leg);
+  }
+  makeLeg(-0.09);
+  makeLeg(0.09);
+
+  // 5. Articulated Arms (Left & Right)
+  function makeLimb(radius, mat) {
+    const geo = new THREE.CylinderGeometry(radius, radius, 1, 16);
+    return new THREE.Mesh(geo, mat);
+  }
+
+  const armJoints = {
+    left_shoulder: new THREE.Vector3(-0.22, 1.44, 0.0),
+    left_elbow: new THREE.Vector3(-0.28, 1.15, -0.04),
+    left_wrist: new THREE.Vector3(-0.22, 0.88, 0.05),
+
+    right_shoulder: new THREE.Vector3(0.22, 1.44, 0.0),
+    right_elbow: new THREE.Vector3(0.38, 1.34, 0.12),
+    right_wrist: new THREE.Vector3(0.30, 1.62, 0.22), // Initial Hello greeting pose
+  };
+
+  const armMeshes = {
+    left_arm: makeLimb(0.042, shirtMat), // short sleeve
+    left_forearm: makeLimb(0.032, skinMat),
+    left_hand: new THREE.Mesh(new THREE.SphereGeometry(0.032, 16, 16), skinMat),
+
+    right_arm: makeLimb(0.042, shirtMat),
+    right_forearm: makeLimb(0.032, skinMat),
+    right_hand: new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.075, 0.02), skinMat), // open palm
+  };
+
+  Object.values(armMeshes).forEach(m => avatar.add(m));
+
+  function updateBone(mesh, p1, p2) {
+    const dist = p1.distanceTo(p2);
+    mesh.scale.set(1, dist, 1);
+    mesh.position.copy(p1).lerp(p2, 0.5);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), p2.clone().sub(p1).normalize());
+  }
+
+  // Sign Dictionary with 3D joint targets
+  const DICT = {
+    'HELLO': {
+      en: 'Hello', hi: 'नमस्ते',
+      rw: [0.30, 1.62, 0.22], re: [0.38, 1.34, 0.12],
+      lw: [-0.22, 0.88, 0.05], le: [-0.28, 1.15, -0.04],
+      rightOpen: true
+    },
+    'HELP': {
+      en: 'Help', hi: 'मदद',
+      rw: [0.00, 1.32, 0.35], re: [0.18, 1.20, 0.20],
+      lw: [-0.05, 1.25, 0.35], le: [-0.18, 1.20, 0.20],
+      rightOpen: false
+    },
+    'DOCTOR': {
+      en: 'Doctor', hi: 'डॉक्टर',
+      rw: [-0.08, 1.24, 0.34], re: [0.15, 1.18, 0.24],
+      lw: [-0.10, 1.20, 0.32], le: [-0.20, 1.15, 0.22],
+      rightOpen: true
+    },
+    'HOSPITAL': {
+      en: 'Hospital', hi: 'अस्पताल',
+      rw: [-0.14, 1.44, 0.12], re: [0.12, 1.32, 0.18],
+      lw: [-0.22, 0.90, 0.05], le: [-0.26, 1.16, -0.02],
+      rightOpen: true
+    },
+    'WHERE': {
+      en: 'Where', hi: 'कहाँ',
+      rw: [0.28, 1.25, 0.34], re: [0.24, 1.20, 0.18],
+      lw: [-0.28, 1.25, 0.34], le: [-0.24, 1.20, 0.18],
+      rightOpen: true
+    },
+    'WATER': {
+      en: 'Water', hi: 'पानी',
+      rw: [0.04, 1.56, 0.24], re: [0.16, 1.32, 0.16],
+      lw: [-0.22, 0.88, 0.05], le: [-0.28, 1.15, -0.04],
+      rightOpen: true
+    },
+    'WANT': {
+      en: 'Want', hi: 'चाहिए',
+      rw: [0.15, 1.22, 0.32], re: [0.18, 1.20, 0.20],
+      lw: [-0.15, 1.22, 0.32], le: [-0.18, 1.20, 0.20],
+      rightOpen: true
+    },
+    'MEDICINE': {
+      en: 'Medicine', hi: 'दवा',
+      rw: [-0.02, 1.28, 0.32], re: [0.16, 1.18, 0.20],
+      lw: [-0.06, 1.22, 0.32], le: [-0.18, 1.16, 0.18],
+      rightOpen: false
+    },
+    'THANK_YOU': {
+      en: 'Thank You', hi: 'धन्यवाद',
+      rw: [0.04, 1.48, 0.36], re: [0.14, 1.28, 0.22],
+      lw: [-0.22, 0.88, 0.05], le: [-0.28, 1.15, -0.04],
+      rightOpen: true
+    },
+    'PLEASE': {
+      en: 'Please', hi: 'कृपया',
+      rw: [0.02, 1.34, 0.20], re: [0.18, 1.24, 0.16],
+      lw: [-0.22, 0.88, 0.05], le: [-0.28, 1.15, -0.04],
+      rightOpen: true
+    }
+  };
+
+  let queue = ['HELLO'];
+  let qIndex = 0;
+  let currentGloss = 'HELLO';
+  let isPaused = false;
+  let animProgress = 0;
+  let prevPose = DICT['HELLO'];
+  let targetPose = DICT['HELLO'];
+
+  function updateSubtitles(gloss) {
+    const meta = DICT[gloss] || DICT['HELLO'];
+    document.getElementById('subtitle-text').innerText = meta.en;
+    document.getElementById('hindi-text').innerText = meta.hi;
+    document.getElementById('gloss-text').innerText = gloss;
+  }
+
+  function sequenceGlosses(tokens) {
+    if (!tokens || tokens.length === 0) return;
+    queue = tokens;
+    qIndex = 0;
+    currentGloss = queue[0];
+    prevPose = targetPose;
+    targetPose = DICT[currentGloss] || DICT['HELLO'];
+    animProgress = 0;
+    isPaused = false;
+    updateSubtitles(currentGloss);
+    document.getElementById('pause-btn').innerText = '⏸ Pause';
+  }
+
+  function playInitialHello() {
+    sequenceGlosses(['HELLO']);
+  }
+
+  function togglePause() {
+    isPaused = !isPaused;
+    document.getElementById('pause-btn').innerText = isPaused ? '▶ Resume' : '⏸ Pause';
+  }
+
+  // Animation Loop
+  let clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+    const time = clock.getElapsedTime();
+
+    // Idle subtle breathing
+    const breathing = Math.sin(time * 2.2) * 0.012;
+    chestMesh.position.y = 1.30 + breathing;
+    headGroup.position.y = 1.68 + breathing * 0.7;
+
+    if (!isPaused) {
+      animProgress += delta * 0.75;
+      if (animProgress >= 1.0) {
+        animProgress = 0;
+        prevPose = targetPose;
+        if (qIndex + 1 < queue.length) {
+          qIndex++;
+          currentGloss = queue[qIndex];
+          targetPose = DICT[currentGloss] || DICT['HELLO'];
+          updateSubtitles(currentGloss);
+        }
+      }
+    }
+
+    const t = (1.0 - Math.cos(Math.min(animProgress, 1.0) * Math.PI)) / 2.0;
+
+    // Interpolate arms
+    const rw = new THREE.Vector3(
+      prevPose.rw[0] + (targetPose.rw[0] - prevPose.rw[0]) * t,
+      prevPose.rw[1] + (targetPose.rw[1] - prevPose.rw[1]) * t,
+      prevPose.rw[2] + (targetPose.rw[2] - prevPose.rw[2]) * t
+    );
+    // Subtle wave flutter during HELLO
+    if (targetPose === DICT['HELLO']) {
+      rw.x += Math.sin(time * 6.0) * 0.025;
+    }
+
+    const re = new THREE.Vector3(
+      prevPose.re[0] + (targetPose.re[0] - prevPose.re[0]) * t,
+      prevPose.re[1] + (targetPose.re[1] - prevPose.re[1]) * t,
+      prevPose.re[2] + (targetPose.re[2] - prevPose.re[2]) * t
+    );
+
+    const lw = new THREE.Vector3(
+      prevPose.lw[0] + (targetPose.lw[0] - prevPose.lw[0]) * t,
+      prevPose.lw[1] + (targetPose.lw[1] - prevPose.lw[1]) * t,
+      prevPose.lw[2] + (targetPose.lw[2] - prevPose.lw[2]) * t
+    );
+
+    const le = new THREE.Vector3(
+      prevPose.le[0] + (targetPose.le[0] - prevPose.le[0]) * t,
+      prevPose.le[1] + (targetPose.le[1] - prevPose.le[1]) * t,
+      prevPose.le[2] + (targetPose.le[2] - prevPose.le[2]) * t
+    );
+
+    const rs = new THREE.Vector3(0.22, 1.44 + breathing, 0.0);
+    const ls = new THREE.Vector3(-0.22, 1.44 + breathing, 0.0);
+
+    updateBone(armMeshes.right_arm, rs, re);
+    updateBone(armMeshes.right_forearm, re, rw);
+    armMeshes.right_hand.position.copy(rw);
+
+    updateBone(armMeshes.left_arm, ls, le);
+    updateBone(armMeshes.left_forearm, le, lw);
+    armMeshes.left_hand.position.copy(lw);
+
+    renderer.render(scene, camera);
+  }
+
+  window.addEventListener('resize', () => {
+    camera.aspect = viewport.clientWidth / viewport.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+  });
+
+  animate();
+</script>
+
+</body>
+</html>
