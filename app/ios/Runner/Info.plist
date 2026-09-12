@@ -24,6 +24,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SignBridge uses the camera to recognise Indian Sign Language signs and convert them to text.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SignBridge uses the microphone for speech-to-sign translation.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

@@ -98,4 +98,26 @@ class ApiService {
     final response = await _dio.get<Map<String, dynamic>>(endpoint);
     return SkeletalPose.fromJson(response.data!);
   }
+
+  /// Logs a recognized sign (Mode A) or translation (Mode B) to the backend
+  /// session history. Fire-and-forget from the caller's perspective.
+  Future<void> addHistoryEntry({
+    required String mode,
+    required String inputContent,
+    required String outputContent,
+    String? detectedLang,
+    List<String>? glosses,
+  }) async {
+    await _dio.post<Map<String, dynamic>>(
+      '/history',
+      data: {
+        'timestamp': DateTime.now().toIso8601String(),
+        'mode': mode,
+        'input_content': inputContent,
+        'output_content': outputContent,
+        'detected_lang': ?detectedLang,
+        'glosses': ?glosses,
+      },
+    );
+  }
 }

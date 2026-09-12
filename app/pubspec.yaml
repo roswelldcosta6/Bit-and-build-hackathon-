@@ -41,6 +41,12 @@ dependencies:
   record: ^6.2.0
   video_player: ^2.9.3
 
+  # Mode A: on-device ISL sign recognition (ML feature)
+  camera: ^0.11.0+1
+  google_mlkit_pose_detection: ^0.11.0
+  tflite_flutter: ^0.11.0
+  flutter_tts: ^4.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -67,6 +73,8 @@ flutter:
     - assets/images/
     - assets/isl/
     - assets/data/
+    - assets/model.tflite
+    - assets/labels_bilingual.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

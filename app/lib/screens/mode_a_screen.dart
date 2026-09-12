@@ -1,279 +1,382 @@
+import 'dart:async';
+
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ModeAScreen extends StatefulWidget {
+import '../state/sign_recognition_provider.dart';
+import '../state/sign_recognition_provider.dart' as rec;
+
+class ModeAScreen extends ConsumerStatefulWidget {
   const ModeAScreen({super.key});
   @override
-  State<ModeAScreen> createState() => _ModeAScreenState();
+  ConsumerState<ModeAScreen> createState() => _ModeAScreenState();
 }
 
-class _ModeAScreenState extends State<ModeAScreen> {
-  bool _running = false;
-  String _english = 'Ready to sign';
-  String _hindi = 'संकेत करने के लिए तैयार';
-  double _confidence = 0.08;
-  final List<String> _sentence = [];
+class _ModeAScreenState extends ConsumerState<ModeAScreen>
+    with WidgetsBindingObserver {
+  rec.SignRecognitionNotifierBase? _notifier;
 
-  final List<Map<String, String>> _demoSigns = [
-    {'en': 'Help', 'hi': 'मदद'},
-    {'en': 'Doctor', 'hi': 'डॉक्टर'},
-    {'en': 'Water', 'hi': 'पानी'},
-    {'en': 'Hospital', 'hi': 'अस्पताल'},
-    {'en': 'Please', 'hi': 'कृपया'},
-  ];
-  int _demoIndex = 0;
-
-  void _triggerSign(String en, String hi) {
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _running = true;
-      _english = en;
-      _hindi = hi;
-      _confidence = 0.93;
-      if (!_sentence.contains(en)) {
-        _sentence.add(en);
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
   }
 
-  void _nextDemo() {
-    final sign = _demoSigns[_demoIndex % _demoSigns.length];
-    _demoIndex++;
-    _triggerSign(sign['en']!, sign['hi']!);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Capture the notifier while ref is still usable, so dispose() can stop
+    // the camera without touching ref.
+    _notifier ??= ref.read(signRecognitionProvider.notifier);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Stop the camera stream when leaving the screen. The loaded TFLite
+    // interpreter stays cached in the provider for a fast restart.
+    unawaited(_notifier?.stopProcessing());
+    _notifier = null;
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      // Android camera surfaces must be released while backgrounded.
+      unawaited(_notifier?.stopProcessing());
+    }
+  }
+
+  Future<void> _toggleProcessing() async {
+    HapticFeedback.lightImpact();
+    final notifier = _notifier ?? ref.read(signRecognitionProvider.notifier);
+    if (notifier == null) return;
+    if (ref.read(signRecognitionProvider).isProcessing) {
+      await notifier.stopProcessing();
+    } else {
+      await notifier.startProcessing();
+    }
   }
 
   void _speakTTS() {
     HapticFeedback.lightImpact();
+    final state = ref.read(signRecognitionProvider);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('🔊 Speaking: "$_english / $_hindi"'),
+        content: Text('🔊 Speaking: "${state.sentenceEn.isEmpty
+            ? state.currentResult?.labelEn ?? ''
+            : state.sentenceEn}"'),
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  void _clearSentence() {
-    setState(() {
-      _sentence.clear();
-      _english = 'Ready to sign';
-      _hindi = 'संकेत करने के लिए तैयार';
-      _running = false;
-      _confidence = 0.08;
-    });
-  }
-
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded),
-        tooltip: 'Back',
-        onPressed: () {
-          if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
-          } else {
-            Navigator.of(context).pushReplacementNamed('/home');
-          }
-        },
+  Widget build(BuildContext context) {
+    final state = ref.watch(signRecognitionProvider);
+    final notifier = ref.watch(signRecognitionProvider.notifier);
+    final running = state.isProcessing;
+    final cameraReady = notifier.cameraReady;
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Back',
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              Navigator.of(context).pushReplacementNamed('/home');
+            }
+          },
+        ),
+        title: const Text('Sign to Text'),
+        actions: [
+          if (state.sentence.isNotEmpty)
+            IconButton(
+              tooltip: 'Clear sentence',
+              icon: const Icon(Icons.refresh),
+              onPressed: () => notifier.clearSentence(),
+            ),
+        ],
       ),
-      title: const Text('Sign to Text'),
-      actions: [
-        if (_sentence.isNotEmpty)
-          IconButton(
-            tooltip: 'Clear sentence',
-            icon: const Icon(Icons.refresh),
-            onPressed: _clearSentence,
-          ),
-      ],
-    ),
-    body: SafeArea(
-      top: false,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 6, 18, 28),
-        children: [
-          SizedBox(
-            height: 220,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF17233A), Color(0xFF355375)],
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 6, 18, 28),
+          children: [
+            SizedBox(
+              height: 220,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF17233A), Color(0xFF355375)],
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      if (cameraReady)
+                        _CameraPreview(
+                          controller:
+                              notifier.cameraController! as CameraController,
+                        )
+                      else
+                        Center(
+                          child: running
+                              ? const Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 28,
+                                      height: 28,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white70,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    ),
+                                    SizedBox(height: 12),
+                                    Text(
+                                      'Loading camera & ISL model…',
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                  ],
+                                )
+                              : const Icon(
+                                  Icons.videocam_outlined,
+                                  color: Colors.white54,
+                                  size: 64,
+                                ),
+                        ),
+                      Positioned(
+                        top: 14,
+                        left: 14,
+                        child: _StatusPill(active: running),
+                      ),
+                      Positioned(
+                        bottom: 14,
+                        left: 14,
+                        right: 14,
+                        child: Text(
+                          state.errorMessage != null
+                              ? state.errorMessage!
+                              : running
+                              ? 'Signing detected — hold the pose for a moment.'
+                              : 'Press Start to open the camera and recognise ISL signs.',
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: state.errorMessage != null
+                                    ? Colors.amberAccent
+                                    : Colors.white70,
+                              ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Stack(
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Bilingual recognition card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Center(
-                      child: Icon(
-                        Icons.videocam_outlined,
-                        color: Colors.white54,
-                        size: 64,
-                      ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Live translation',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const Spacer(),
+                        Text(
+                          state.currentResult != null
+                              ? '${(state.confidence * 100).toInt()}% match'
+                              : running
+                              ? 'Watching…'
+                              : 'Waiting',
+                          style: TextStyle(
+                            color: state.currentResult != null
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ),
-                    Positioned(
-                      top: 14,
-                      left: 14,
-                      child: _StatusPill(active: _running),
+                    const SizedBox(height: 14),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                state.currentResult?.labelEn ??
+                                    (state.sentenceEn.isEmpty
+                                        ? 'Ready to sign'
+                                        : state.sentenceEn),
+                                style: Theme.of(context).textTheme.headlineMedium
+                                    ?.copyWith(fontWeight: FontWeight.w900),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                state.currentResult?.labelHi ??
+                                    (state.sentenceHi.isEmpty
+                                        ? 'संकेत करने के लिए तैयार'
+                                        : state.sentenceHi),
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (state.currentResult != null)
+                          IconButton.filledTonal(
+                            tooltip: 'Speak Aloud (TTS)',
+                            onPressed: _speakTTS,
+                            icon: const Icon(Icons.volume_up_outlined),
+                          ),
+                      ],
                     ),
-                    Positioned(
-                      bottom: 14,
-                      left: 14,
-                      right: 14,
-                      child: Text(
-                        'Camera stream ready for on-device MediaPipe landmark detector.',
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(color: Colors.white70),
-                      ),
+                    const SizedBox(height: 14),
+                    LinearProgressIndicator(
+                      value: state.currentResult != null ? state.confidence : 0,
+                      minHeight: 6,
+                      borderRadius: BorderRadius.zero,
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 14),
+            const SizedBox(height: 14),
 
-          // Bilingual Recognition Card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.auto_awesome_outlined,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Live translation',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const Spacer(),
-                      Text(
-                        _running ? '${(_confidence * 100).toInt()}% match' : 'Waiting',
-                        style: TextStyle(
-                          color: _running
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _english,
-                              style: Theme.of(context).textTheme.headlineMedium
-                                  ?.copyWith(fontWeight: FontWeight.w900),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _hindi,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
+            // Sentence builder accumulator
+            Text(
+              'Sentence builder',
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: state.sentence.isEmpty
+                    ? Text(
+                        'Recognized signs will accumulate here into a sentence.',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      )
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: state.sentence
+                            .map(
+                              (r) => Chip(
+                                label: Text(
+                                  r.labelEn,
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                   ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (_running)
-                        IconButton.filledTonal(
-                          tooltip: 'Speak Aloud (TTS)',
-                          onPressed: _speakTTS,
-                          icon: const Icon(Icons.volume_up_outlined),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  LinearProgressIndicator(
-                    value: _confidence,
-                    minHeight: 6,
-                    borderRadius: BorderRadius.zero,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Sentence Builder Accumulator
-          Text(
-            'Sentence builder',
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 6),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: _sentence.isEmpty
-                  ? Text(
-                      'Recognized signs will accumulate here into a sentence.',
-                      style: TextStyle(color: Colors.grey.shade600),
-                    )
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: _sentence
-                          .map(
-                            (w) => Chip(
-                              label: Text(
-                                w,
-                                style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
                               ),
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                            ),
-                          )
-                          .toList(),
-                    ),
+                            )
+                            .toList(),
+                      ),
+              ),
             ),
-          ),
-          const SizedBox(height: 14),
+            const SizedBox(height: 14),
 
-          // Interactive Simulation Buttons
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _nextDemo,
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Simulate Next Sign'),
+            // Live controls
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _toggleProcessing,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: running
+                          ? Theme.of(context).colorScheme.error
+                          : null,
+                    ),
+                    icon: Icon(running ? Icons.stop : Icons.play_arrow),
+                    label: Text(running ? 'Stop' : 'Start signing'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.tonalIcon(
-                onPressed: _running ? _speakTTS : null,
-                icon: const Icon(Icons.record_voice_over_outlined),
-                label: const Text('Speak'),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 8),
+                FilledButton.tonalIcon(
+                  onPressed: state.sentenceEn.isNotEmpty ? _speakTTS : null,
+                  icon: const Icon(Icons.record_voice_over_outlined),
+                  label: const Text('Speak'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
+}
+
+/// Live camera feed, mirrored for the front camera (natural signing view).
+class _CameraPreview extends StatelessWidget {
+  const _CameraPreview({required this.controller});
+
+  final CameraController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final mirrored =
+        controller.description.lensDirection == CameraLensDirection.front;
+    return Transform(
+      alignment: Alignment.center,
+      transform: Matrix4.diagonal3Values(mirrored ? -1.0 : 1.0, 1.0, 1.0),
+      child: OverflowBox(
+        alignment: Alignment.center,
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: controller.value.previewSize!.height,
+            height: controller.value.previewSize!.width,
+            child: CameraPreview(controller),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.active});
+
   final bool active;
+
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
