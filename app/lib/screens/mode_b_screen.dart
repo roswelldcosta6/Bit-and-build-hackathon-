@@ -1,11 +1,9 @@
-﻿import "dart:io";
-
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 import "package:permission_handler/permission_handler.dart";
-import "package:record/record.dart";
+import "package:speech_to_text/speech_to_text.dart" as stt;
 import "package:video_player/video_player.dart";
 
 import "../services/isl_translator.dart";
@@ -18,10 +16,13 @@ class ModeBScreen extends ConsumerStatefulWidget {
 
 class _ModeBScreenState extends ConsumerState<ModeBScreen> {
   final _text = TextEditingController(text: "Thank you");
-  final _recorder = AudioRecorder();
+  final _speech = stt.SpeechToText();
 
   bool _loading = true;
-  bool _recording = false;
+  bool _speechInitialized = false;
+  bool _userWantsMic = false;
+  bool _listening = false;
+  String _speechLocale = "en-IN"; // "en-IN" for Indian English / Hinglish, "hi-IN" for Hindi
   bool _submitting = false;
   String? _error;
 
@@ -89,9 +90,7 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
     setState(() { _currentIdx = index; _playing = true; _done = false; });
 
     final videoPath = glosses[index].video;
-    final newCtrl = kIsWeb
-        ? VideoPlayerController.asset(videoPath)
-        : VideoPlayerController.asset(videoPath);
+    final newCtrl = VideoPlayerController.asset(videoPath);
 
     try {
       await newCtrl.initialize();
@@ -128,33 +127,154 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
     }
   }
 
-  Future<void> _toggleRecord() async {
-    if (kIsWeb) {
-      _translateText("Where is home");
+  Future<void> _toggleSpeech() async {
+    // 1. If currently listening, stop
+    if (_listening || _userWantsMic) {
+      _userWantsMic = false;
+      setState(() => _listening = false);
+      try {
+        await _speech.stop();
+      } catch (_) {}
       return;
     }
-    if (_recording) {
-      final path = await _recorder.stop();
-      setState(() => _recording = false);
-      if (path != null) {
-        _translateText("Thank you"); // STT fallback for demo
+
+    _userWantsMic = true;
+    setState(() {
+      _listening = true;
+      _error = null;
+    });
+
+    // 2. Request microphone permission explicitly on Mobile
+    if (!kIsWeb) {
+      final status = await Permission.microphone.status;
+      if (!status.isGranted) {
+        final req = await Permission.microphone.request();
+        if (!req.isGranted) {
+          _userWantsMic = false;
+          if (mounted) {
+            setState(() {
+              _listening = false;
+              _error = "Microphone permission required for voice input.";
+            });
+          }
+          return;
+        }
+      }
+    }
+
+    // 3. Initialize speech-to-text if not done yet
+    if (!_speechInitialized) {
+      try {
+        _speechInitialized = await _speech.initialize(
+          onStatus: _onSpeechStatus,
+          onError: _onSpeechError,
+        );
+      } catch (e) {
+        _speechInitialized = false;
+      }
+    }
+
+    if (!_speechInitialized) {
+      _userWantsMic = false;
+      if (mounted) {
+        setState(() {
+          _listening = false;
+          _error = "Microphone access not available. Please allow mic permissions in browser settings.";
+        });
       }
       return;
     }
-    if (!await Permission.microphone.request().isGranted) {
-      if (mounted) setState(() => _error = "Microphone permission required.");
+
+    // 4. Start continuous listening loop
+    _startListeningLoop();
+  }
+
+  Future<void> _startListeningLoop() async {
+    if (!_userWantsMic || !mounted) return;
+
+    setState(() {
+      _listening = true;
+    });
+
+    try {
+      await _speech.listen(
+        onResult: (result) {
+          if (mounted && result.recognizedWords.isNotEmpty) {
+            setState(() {
+              _text.text = result.recognizedWords;
+              _text.selection = TextSelection.fromPosition(
+                TextPosition(offset: _text.text.length),
+              );
+            });
+          }
+        },
+        listenOptions: stt.SpeechListenOptions(
+          listenMode: stt.ListenMode.dictation,
+          cancelOnError: false,
+          partialResults: true,
+          localeId: _speechLocale,
+        ),
+      );
+    } catch (_) {
+      if (_userWantsMic && mounted) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (_userWantsMic && mounted) _startListeningLoop();
+        });
+      }
+    }
+  }
+
+  void _onSpeechStatus(String status) {
+    // Keep mic ON until the user presses the stop button!
+    // If the browser ends session due to pause or silence, immediately restart:
+    if (_userWantsMic && (status == "notListening" || status == "done")) {
+      Future.delayed(const Duration(milliseconds: 250), () {
+        if (_userWantsMic && mounted) {
+          _startListeningLoop();
+        }
+      });
+    }
+  }
+
+  void _onSpeechError(dynamic errorNotification) {
+    final msg = errorNotification?.errorMsg?.toString().toLowerCase() ?? "";
+
+    // User requested to remove network error - suppress network, no-speech, and aborted
+    if (msg.contains("network") || msg.contains("no-speech") || msg.contains("aborted")) {
+      if (_userWantsMic && mounted) {
+        if (_speechLocale == "en-IN" && msg.contains("network")) {
+          // If en-IN had cloud lookup glitch on Edge, seamlessly try en-US
+          _speechLocale = "en-US";
+        }
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (_userWantsMic && mounted) _startListeningLoop();
+        });
+      }
       return;
     }
-    final path =
-        "${Directory.systemTemp.path}${Platform.pathSeparator}signbridge_${DateTime.now().millisecondsSinceEpoch}.wav";
-    await _recorder.start(const RecordConfig(encoder: AudioEncoder.wav), path: path);
-    if (mounted) setState(() => _recording = true);
+
+    if (msg.contains("not-allowed") || msg.contains("permission")) {
+      _userWantsMic = false;
+      if (mounted) {
+        setState(() {
+          _listening = false;
+          _error = "Microphone permission denied. Please allow microphone access in your browser.";
+        });
+      }
+      return;
+    }
+
+    if (_userWantsMic && mounted) {
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (_userWantsMic && mounted) _startListeningLoop();
+      });
+    }
   }
 
   @override
   void dispose() {
     _text.dispose();
-    _recorder.dispose();
+    _speech.stop();
     _videoCtrl?.dispose();
     super.dispose();
   }
@@ -259,7 +379,7 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ── Text input ─────────────────────────────────────────
+                  // ── Text input Card with Speech-to-Text Microphone ─────
                   Card(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: Padding(
@@ -267,46 +387,170 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Enter text or use microphone",
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                              )),
-                          const SizedBox(height: 8),
+                          // Header + Language selector for Speech
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Enter text or speak into mic",
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              // Language Toggle (English/Hinglish vs Hindi)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(2),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _LangPill(
+                                      label: "EN (Hinglish)",
+                                      selected: _speechLocale == "en_IN",
+                                      onTap: () {
+                                        if (_listening) _speech.stop();
+                                        setState(() {
+                                          _speechLocale = "en_IN";
+                                          _listening = false;
+                                        });
+                                      },
+                                    ),
+                                    _LangPill(
+                                      label: "हिन्दी (HI)",
+                                      selected: _speechLocale == "hi_IN",
+                                      onTap: () {
+                                        if (_listening) _speech.stop();
+                                        setState(() {
+                                          _speechLocale = "hi_IN";
+                                          _listening = false;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Live Listening Status Banner
+                          if (_listening)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _speechLocale == "hi_IN"
+                                          ? "सुन रहा हूँ (हिन्दी)... बोलें"
+                                          : "Listening (English / Hinglish)... Speak now",
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: _toggleSpeech,
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    child: const Text("Done", style: TextStyle(color: Colors.red, fontSize: 12)),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Text field with direct mic inside suffixIcon
                           TextField(
                             controller: _text,
                             decoration: InputDecoration(
-                              hintText: "e.g. Thank you, Where is home, मत जाओ",
+                              hintText: _speechLocale == "hi_IN"
+                                  ? "जैसे: धन्यवाद, घर कहाँ है, मत जाओ"
+                                  : "e.g. Thank you, Where is home, Come here",
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              suffixIcon: IconButton(
-                                icon: const Icon(Icons.send_rounded),
-                                onPressed: _submitting ? null : () => _translateText(),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: _listening
+                                        ? "Stop listening"
+                                        : "Tap to speak (${_speechLocale == 'hi_IN' ? 'Hindi' : 'English / Hinglish'})",
+                                    icon: Icon(
+                                      _listening ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                                      color: _listening ? Colors.red : const Color(0xFF10B981),
+                                      size: 26,
+                                    ),
+                                    onPressed: _toggleSpeech,
+                                  ),
+                                  IconButton(
+                                    tooltip: "Translate to Sign",
+                                    icon: const Icon(Icons.send_rounded),
+                                    onPressed: _submitting ? null : () => _translateText(),
+                                  ),
+                                ],
                               ),
                             ),
                             onSubmitted: (_) => _translateText(),
                             textInputAction: TextInputAction.send,
                           ),
                           const SizedBox(height: 10),
+
+                          // Action row: Translate Button + Full Speech Mic Button
                           Row(
                             children: [
                               Expanded(
+                                flex: 3,
                                 child: FilledButton.icon(
                                   onPressed: _submitting ? null : () => _translateText(),
                                   icon: _submitting
-                                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                                       : const Icon(Icons.translate_rounded, size: 18),
-                                  label: Text(_submitting ? "Translating…" : "Translate"),
+                                  label: Text(_submitting ? "Translating…" : "Translate to Sign"),
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              FilledButton.tonal(
-                                onPressed: _toggleRecord,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: _recording ? Colors.red.withValues(alpha: 0.15) : null,
-                                ),
-                                child: Icon(
-                                  _recording ? Icons.stop_rounded : Icons.mic_rounded,
-                                  color: _recording ? Colors.red : null,
+                              Expanded(
+                                flex: 2,
+                                child: FilledButton.icon(
+                                  onPressed: _toggleSpeech,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: _listening
+                                        ? Colors.red
+                                        : const Color(0xFF10B981),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  ),
+                                  icon: Icon(
+                                    _listening ? Icons.stop_rounded : Icons.mic_rounded,
+                                    size: 20,
+                                  ),
+                                  label: Text(
+                                    _listening ? "Stop Mic" : "Speak Mic",
+                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                  ),
                                 ),
                               ),
                             ],
@@ -345,9 +589,30 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                     ],
                   ),
 
-                  if (_error != null) ...[
+                  if (_error != null &&
+                      !_error!.toLowerCase().contains("network") &&
+                      !_error!.toLowerCase().contains("no-speech") &&
+                      !_error!.toLowerCase().contains("speech recognition")) ...[
                     const SizedBox(height: 12),
-                    Text(_error!, style: TextStyle(color: theme.colorScheme.error, fontSize: 12)),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, size: 16, color: theme.colorScheme.error),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _error!,
+                              style: TextStyle(color: theme.colorScheme.error, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ],
               ),
@@ -430,6 +695,35 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _LangPill extends StatelessWidget {
+  const _LangPill({required this.label, required this.selected, required this.onTap});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF10B981) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }
