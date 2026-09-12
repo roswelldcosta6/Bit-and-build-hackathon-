@@ -70,13 +70,32 @@ class SettingsScreen extends ConsumerWidget {
                     },
                   ),
                 ] else ...[
+                  ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: const Text('Guest'),
+                    subtitle: const Text(
+                      'Browsing without an account',
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.logout),
+                    title: const Text(
+                      'Sign out',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    onTap: () async {
+                      // Guests exit to the landing page.
+                      await ref.read(authProvider.notifier).signOut();
+                      if (context.mounted) context.go('/landing');
+                    },
+                  ),
+                  const Divider(height: 1),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('You are browsing as a guest.'),
-                        const SizedBox(height: 4),
                         Text(
                           'Create an account to keep your translation history and preferences on the server.',
                           style: Theme.of(context).textTheme.bodySmall
@@ -91,7 +110,7 @@ class SettingsScreen extends ConsumerWidget {
                           constraints: const BoxConstraints(minHeight: 44),
                           child: OutlinedButton(
                             onPressed: () => context.go('/login'),
-                            child: const Text('Sign in or create an account'),
+                            child: const Text('Sign up or create an account'),
                           ),
                         ),
                       ],
@@ -113,19 +132,6 @@ class SettingsScreen extends ConsumerWidget {
                   value: settings.darkMode,
                   onChanged: (value) =>
                       notifier.update(settings.copyWith(darkMode: value)),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  title: const Text('Text size'),
-                  subtitle: Slider(
-                    value: settings.fontScale,
-                    min: .9,
-                    max: 1.3,
-                    divisions: 4,
-                    label: '${(settings.fontScale * 100).round()}%',
-                    onChanged: (value) =>
-                        notifier.update(settings.copyWith(fontScale: value)),
-                  ),
                 ),
               ],
             ),

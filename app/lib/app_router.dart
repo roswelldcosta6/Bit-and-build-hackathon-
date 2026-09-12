@@ -16,13 +16,16 @@ import 'state/settings_controller.dart';
 final appRouter = GoRouter(
   initialLocation: '/splash',
   redirect: (context, state) {
-    final authed = authGate.value;
+    final inApp = authGate.value; // signed in OR guest
+    final signedIn = signedInGate.value; // real account only
     final path = state.uri.path;
     final onAuthPath = path == '/login';
     if (path == '/splash') return null; // splash decides after auth check
     if (path == '/landing') return null; // public landing page
-    if (!authed && !onAuthPath) return '/login';
-    if (authed && onAuthPath) return '/';
+    if (!inApp && !onAuthPath) return '/login';
+    // Only genuinely signed-in users get bounced off the auth screen;
+    // guests may open it to sign up / sign in.
+    if (signedIn && onAuthPath) return '/';
     return null;
   },
   routes: [

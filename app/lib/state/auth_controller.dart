@@ -10,6 +10,11 @@ import '../services/api_service.dart';
 /// without rebuilding the router.
 final authGate = ValueNotifier<bool>(false);
 
+/// True only when a real account session exists (not guest mode).
+/// Signed-in users are bounced off the login/signup routes; guests are
+/// allowed there so they can create an account.
+final signedInGate = ValueNotifier<bool>(false);
+
 /// Persists the session token between app launches.
 ///
 /// The default keeps the token in memory only (sign-in is required again on
@@ -50,7 +55,10 @@ class AuthController extends Notifier<AuthState> {
       // Restore the header immediately; the profile is re-verified lazily by
       // the router via checkSession().
       ref.read(apiServiceProvider).setAuthToken(token);
-      WidgetsBinding.instance.addPostFrameCallback((_) => authGate.value = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authGate.value = true;
+        signedInGate.value = true;
+      });
       return AuthState(token: token);
     }
     return const AuthState();
@@ -61,6 +69,7 @@ class AuthController extends Notifier<AuthState> {
     ref.read(apiServiceProvider).setAuthToken(result.token);
     state = AuthState(user: result.user, token: result.token);
     authGate.value = true;
+    signedInGate.value = true;
   }
 
   Future<void> register({
@@ -101,6 +110,7 @@ class AuthController extends Notifier<AuthState> {
       final user = await ref.read(apiServiceProvider).me();
       state = AuthState(user: user, token: token);
       authGate.value = true;
+      signedInGate.value = true;
       return true;
     } on DioException {
       await signOut();
@@ -112,6 +122,7 @@ class AuthController extends Notifier<AuthState> {
     ref.read(apiServiceProvider).setAuthToken(null);
     state = const AuthState(isGuest: true);
     authGate.value = true;
+    signedInGate.value = false;
   }
 
   Future<void> signOut() async {
@@ -119,6 +130,7 @@ class AuthController extends Notifier<AuthState> {
     ref.read(apiServiceProvider).setAuthToken(null);
     state = const AuthState();
     authGate.value = false;
+    signedInGate.value = false;
   }
 }
 

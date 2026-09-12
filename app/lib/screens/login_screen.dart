@@ -4,11 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../state/auth_controller.dart';
 
-const Color _accent = Color(0xFF0F62FE);
+/// Landing palette (matched to the official logo / landing screen).
+const Color _green = Color(0xFF4E9B8F);
+const Color _navy = Color(0xFF1B263B);
+const Color _inkText = Color(0xFF1E293B);
+const Color _subText = Color(0xFF64748B);
+const Color _pageBg = Color(0xFFFBFBFA);
+const Color _hairline = Color(0xFFE5E7EB);
 const Color _danger = Color(0xFFDA1E28);
 
-/// Pocket-minimal auth screen: sign-in / sign-up / guest.
-/// No rounded corners, no emoji, hairline dividers, generous whitespace.
+/// Auth screen (sign in / sign up / guest) matching the landing page theme.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
   @override
@@ -58,7 +63,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } else {
         await auth.login(email: _email.text.trim(), password: _password.text);
       }
-      if (mounted) context.go('/');
+      if (mounted) context.go('/home');
     } catch (e) {
       if (mounted) setState(() => _error = authErrorMessage(e));
     } finally {
@@ -68,209 +73,224 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _guest() {
     ref.read(authProvider.notifier).continueAsGuest();
-    context.go('/');
+    context.go('/home');
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final divider = theme.dividerColor;
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: _pageBg,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Wordmark
-                    Row(
-                      children: [
-                        Container(
-                          width: 34,
-                          height: 34,
-                          color: theme.colorScheme.primary,
-                          alignment: Alignment.center,
+                    // Back to landing
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        tooltip: 'Back',
+                        onPressed: () => context.go('/landing'),
+                        icon: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: _inkText,
+                        ),
+                      ),
+                    ),
+
+                    // Logo emblem + wordmark (same asset as the landing page)
+                    const SizedBox(height: 4),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/logo_emblem.png',
+                        width: 96,
+                        height: 80,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: _green,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                           child: const Icon(
-                            Icons.sign_language,
-                            size: 20,
+                            Icons.sign_language_rounded,
+                            size: 34,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'SignBridge',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
-                          ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Center(
+                      child: Text(
+                        'SignBridge',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: _navy,
+                          letterSpacing: -0.5,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 48),
-                    Text(
-                      _isSignUp ? 'Create your account' : 'Welcome back',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _isSignUp
-                          ? 'A few details and you are in.'
-                          : 'Sign in to continue translating.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 4),
+                    Center(
+                      child: Text(
+                        _isSignUp
+                            ? 'Create your account'
+                            : 'Welcome back',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: _subText,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 26),
 
-                    if (_isSignUp) ...[
-                      _Field(
-                        controller: _name,
-                        label: 'Full name',
-                        hint: 'Roswald Dcosta',
-                        validator: (v) =>
-                            (v == null || v.trim().length < 2)
-                            ? 'Enter your full name'
-                            : null,
-                      ),
-                      _DividerGap(divider: divider),
-                    ],
-                    _Field(
-                      controller: _email,
-                      label: 'Email',
-                      hint: 'you@example.com',
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      validator: (v) {
-                        final value = v?.trim() ?? '';
-                        if (value.isEmpty) return 'Enter your email';
-                        final re = RegExp(
-                          r'^[^@\s]+@[^@\s]+\.[^@\s]{2,}$',
-                        );
-                        if (!re.hasMatch(value)) {
-                          return 'Enter a valid email address';
-                        }
-                        return null;
-                      },
-                    ),
-                    _DividerGap(divider: divider),
-                    _Field(
-                      controller: _password,
-                      label: 'Password',
-                      hint: 'At least 6 characters',
-                      obscure: _obscure,
-                      autofillHints: const [AutofillHints.password],
-                      suffix: IconButton(
-                        onPressed: () =>
-                            setState(() => _obscure = !_obscure),
-                        icon: Icon(
-                          _obscure
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          size: 20,
-                        ),
-                        tooltip: _obscure ? 'Show password' : 'Hide password',
-                      ),
-                      validator: (v) =>
-                          (v == null || v.length < 6)
-                          ? 'Password must be at least 6 characters'
-                          : null,
-                    ),
-                    if (_isSignUp) ...[
-                      _DividerGap(divider: divider),
-                      _Field(
-                        controller: _confirm,
-                        label: 'Confirm password',
-                        hint: 'Repeat your password',
-                        obscure: true,
-                        validator: (v) =>
-                            (v == null || v != _password.text)
-                            ? 'Passwords do not match'
-                            : null,
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'I AM',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          letterSpacing: 1.2,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(value: 'deaf_user', label: Text('Deaf')),
-                          ButtonSegment(
-                            value: 'hearing_peer',
-                            label: Text('Hearing'),
-                          ),
-                          ButtonSegment(
-                            value: 'interpreter',
-                            label: Text('Interpreter'),
+                    // Card with the fields (landing-style rounded card)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: _hairline, width: 1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
-                        selected: {_role},
-                        showSelectedIcon: false,
-                        style: ButtonStyle(
-                          shape: WidgetStatePropertyAll(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_isSignUp) ...[
+                            _Field(
+                              controller: _name,
+                              label: 'Full name',
+                              hint: 'Roswald Dcosta',
+                              validator: (v) =>
+                                  (v == null || v.trim().length < 2)
+                                  ? 'Enter your full name'
+                                  : null,
                             ),
+                            const SizedBox(height: 14),
+                          ],
+                          _Field(
+                            controller: _email,
+                            label: 'Email',
+                            hint: 'you@example.com',
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.email],
+                            validator: (v) {
+                              final value = v?.trim() ?? '';
+                              if (value.isEmpty) return 'Enter your email';
+                              final re = RegExp(
+                                r'^[^@\s]+@[^@\s]+\.[^@\s]{2,}$',
+                              );
+                              if (!re.hasMatch(value)) {
+                                return 'Enter a valid email address';
+                              }
+                              return null;
+                            },
                           ),
-                          side: WidgetStatePropertyAll(
-                            BorderSide(color: divider),
+                          const SizedBox(height: 14),
+                          _Field(
+                            controller: _password,
+                            label: 'Password',
+                            hint: 'At least 6 characters',
+                            obscure: _obscure,
+                            autofillHints: const [AutofillHints.password],
+                            suffix: IconButton(
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                size: 20,
+                                color: _subText,
+                              ),
+                              tooltip: _obscure
+                                  ? 'Show password'
+                                  : 'Hide password',
+                            ),
+                            validator: (v) =>
+                                (v == null || v.length < 6)
+                                ? 'Password must be at least 6 characters'
+                                : null,
                           ),
-                        ),
-                        onSelectionChanged: (value) =>
-                            setState(() => _role = value.first),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'PREFERRED LANGUAGE',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          letterSpacing: 1.2,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(value: 'en', label: Text('English')),
-                          ButtonSegment(value: 'hi', label: Text('Hindi')),
+                          if (_isSignUp) ...[
+                            const SizedBox(height: 14),
+                            _Field(
+                              controller: _confirm,
+                              label: 'Confirm password',
+                              hint: 'Repeat your password',
+                              obscure: true,
+                              validator: (v) =>
+                                  (v == null || v != _password.text)
+                                  ? 'Passwords do not match'
+                                  : null,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'I AM',
+                              style: TextStyle(
+                                fontSize: 11,
+                                letterSpacing: 1.2,
+                                color: _subText,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _ChoiceChips(
+                              values: const {
+                                'deaf_user': 'Deaf',
+                                'hearing_peer': 'Hearing',
+                                'interpreter': 'Interpreter',
+                              },
+                              selected: _role,
+                              onSelected: (v) => setState(() => _role = v),
+                            ),
+                            const SizedBox(height: 14),
+                            const Text(
+                              'PREFERRED LANGUAGE',
+                              style: TextStyle(
+                                fontSize: 11,
+                                letterSpacing: 1.2,
+                                color: _subText,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _ChoiceChips(
+                              values: const {'en': 'English', 'hi': 'Hindi'},
+                              selected: _lang,
+                              onSelected: (v) => setState(() => _lang = v),
+                            ),
+                          ],
                         ],
-                        selected: {_lang},
-                        showSelectedIcon: false,
-                        style: ButtonStyle(
-                          shape: WidgetStatePropertyAll(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero,
-                            ),
-                          ),
-                          side: WidgetStatePropertyAll(
-                            BorderSide(color: divider),
-                          ),
-                        ),
-                        onSelectionChanged: (value) =>
-                            setState(() => _lang = value.first),
                       ),
-                    ],
+                    ),
 
                     if (_error != null) ...[
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          border: Border.all(color: _danger),
+                          color: const Color(0xFFFDECEC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _danger.withValues(alpha: .4),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -283,8 +303,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             Expanded(
                               child: Text(
                                 _error!,
-                                style: theme.textTheme.bodySmall?.copyWith(
+                                style: const TextStyle(
+                                  fontSize: 13,
                                   color: _danger,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -293,14 +315,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ],
 
-                    const SizedBox(height: 32),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 48),
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _accent,
+                    const SizedBox(height: 22),
+                    // Primary action — navy like the landing Get Started button
+                    SizedBox(
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _navy,
                           foregroundColor: Colors.white,
-                          shape: const RoundedRectangleBorder(),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                         onPressed: _busy ? null : _submit,
                         child: _busy
@@ -315,12 +341,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : Text(
                                 _isSignUp ? 'Create account' : 'Sign in',
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                     TextButton(
                       onPressed: _busy
                           ? null
@@ -329,41 +357,68 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               _error = null;
                             }),
                       style: TextButton.styleFrom(
-                        foregroundColor: _accent,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        foregroundColor: _green,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       child: Text(
                         _isSignUp
                             ? 'Already have an account? Sign in'
                             : 'New to SignBridge? Create an account',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
-                        Expanded(child: Divider(height: 1, color: divider)),
+                        const Expanded(
+                          child: Divider(height: 1, color: _hairline),
+                        ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
                             'or',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: _subText,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        Expanded(child: Divider(height: 1, color: divider)),
+                        const Expanded(
+                          child: Divider(height: 1, color: _hairline),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _busy ? null : _guest,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: theme.colorScheme.onSurface,
-                        side: BorderSide(color: divider),
-                        shape: const RoundedRectangleBorder(),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                    SizedBox(
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: _busy ? null : _guest,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _navy,
+                          side: const BorderSide(color: _hairline, width: 1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          'Continue as guest',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                      child: const Text('Continue as guest'),
+                    ),
+                    const SizedBox(height: 14),
+                    const Center(
+                      child: Text(
+                        'Bilingual • India-First Design • Offline Capable',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF94A3B8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -376,7 +431,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-/// Square text field with a floating label and hairline border.
+/// Pill choice chips in the landing green.
+class _ChoiceChips extends StatelessWidget {
+  const _ChoiceChips({
+    required this.values,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final Map<String, String> values;
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: values.entries.map((entry) {
+      final isSel = entry.key == selected;
+      return ChoiceChip(
+        label: Text(entry.value),
+        selected: isSel,
+        onSelected: (_) => onSelected(entry.key),
+        showCheckmark: false,
+        labelStyle: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: isSel ? Colors.white : _subText,
+        ),
+        selectedColor: _green,
+        backgroundColor: Colors.white,
+        side: BorderSide(color: isSel ? _green : _hairline, width: 1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        visualDensity: VisualDensity.compact,
+      );
+    }).toList(),
+  );
+}
+
+/// Rounded text field in the landing style.
 class _Field extends StatelessWidget {
   const _Field({
     required this.controller,
@@ -400,56 +495,51 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return TextFormField(
       controller: controller,
       validator: validator,
       obscureText: obscure,
       keyboardType: keyboardType,
       autofillHints: autofillHints,
-      style: theme.textTheme.bodyMedium,
+      style: const TextStyle(
+        fontSize: 14,
+        color: _inkText,
+        fontWeight: FontWeight.w500,
+      ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+        labelStyle: const TextStyle(fontSize: 13, color: _subText),
+        hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
         floatingLabelBehavior: FloatingLabelBehavior.always,
         suffixIcon: suffix,
         filled: true,
-        fillColor: theme.colorScheme.surface,
+        fillColor: const Color(0xFFF8F9FA),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
-          vertical: 15,
+          vertical: 14,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: theme.dividerColor),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _hairline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: theme.dividerColor),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _hairline),
         ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: _accent, width: 1.4),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _green, width: 1.4),
         ),
-        errorBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: _danger),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _danger),
         ),
-        focusedErrorBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: _danger, width: 1.4),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _danger, width: 1.4),
         ),
       ),
     );
   }
-}
-
-class _DividerGap extends StatelessWidget {
-  const _DividerGap({required this.divider});
-  final Color divider;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Divider(height: 1, color: divider),
-  );
 }
