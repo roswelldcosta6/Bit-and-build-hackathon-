@@ -1,151 +1,227 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../state/settings_controller.dart';
+
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
   @override
-  Widget build(BuildContext context) => SafeArea(
-    child: SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final isDark = settings.darkMode;
+
+    final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+    final textColor = isDark ? Colors.white : const Color(0xFF1E293B);
+    final subtextColor = isDark ? const Color(0xFF9E9E9E) : const Color(0xFF64748B);
+    final cardBgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final cardBorderColor = isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE5E7EB);
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                color: Theme.of(context).colorScheme.primary,
-                child: const Icon(
-                  Icons.sign_language,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Top Bar: Back to Landing button & Brand
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  IconButton(
+                    tooltip: 'Back to Landing',
+                    icon: Icon(Icons.arrow_back_rounded, color: textColor, size: 24),
+                    onPressed: () => context.go('/landing'),
+                  ),
+                  const SizedBox(width: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      'assets/images/logo_emblem.png',
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Text(
+                        '🤟',
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Text(
                     'SignBridge',
-                    style: Theme.of(context).textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                  const Text('Indian Sign Language, two ways'),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 36),
-          Text(
-            'How would you like to communicate?',
-            style: Theme.of(context).textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          const Text('Choose a translation mode to get started.'),
-          const SizedBox(height: 26),
-          _ModeCard(
-            color: Theme.of(context).colorScheme.primary,
-            icon: Icons.videocam_outlined,
-            title: 'Sign to Speak',
-            subtitle: 'Use the camera to translate ISL into English and Hindi.',
-            cta: 'Open camera',
-            onTap: () => context.push('/mode-a'),
-          ),
-          const SizedBox(height: 16),
-          _ModeCard(
-            color: Theme.of(context).colorScheme.onSurface,
-            icon: Icons.record_voice_over_outlined,
-            title: 'Speak to Sign',
-            subtitle:
-                'Speak or type in Hindi or English and watch the avatar sign.',
-            cta: 'Start speaking',
-            onTap: () => context.push('/mode-b'),
-          ),
-          const SizedBox(height: 28),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                children: [
-                  const Icon(Icons.wifi_off_outlined),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Designed for real conversations',
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const Text(
-                          'Mode A can be connected to the on-device recognizer when the model is added.',
-                        ),
-                      ],
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.2,
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
 
-class _ModeCard extends StatelessWidget {
-  const _ModeCard({
-    required this.color,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.cta,
-    required this.onTap,
-  });
-  final Color color;
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String cta;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => Card(
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(13),
-              color: color.withValues(alpha: .12),
-              child: Icon(icon, color: color, size: 30),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 7),
-            Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Text(
-                  cta,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w700),
+              const SizedBox(height: 32),
+
+              // Card 1: Sign → Text (Changed from "Sign → Speak" as requested)
+              _ModeSelectionCard(
+                icon: Icons.videocam_rounded,
+                iconColor: const Color(0xFFF59E0B),
+                iconBgColor: isDark ? const Color(0xFF382916) : const Color(0xFFFEF3C7),
+                cardBgColor: cardBgColor,
+                cardBorderColor: cardBorderColor,
+                titleColor: textColor,
+                subtitleColor: subtextColor,
+                title: 'Sign → Text',
+                subtitle: 'ISL gestures to\nbilingual text + speech',
+                onTap: () => context.push('/mode-a'),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Card 2: Text → Sign
+              _ModeSelectionCard(
+                icon: Icons.translate_rounded,
+                iconColor: const Color(0xFF10B981),
+                iconBgColor: isDark ? const Color(0xFF132B25) : const Color(0xFFD1FAE5),
+                cardBgColor: cardBgColor,
+                cardBorderColor: cardBorderColor,
+                titleColor: textColor,
+                subtitleColor: subtextColor,
+                title: 'Text → Sign',
+                subtitle: 'Hindi/English text or speech to\nISL avatar',
+                onTap: () => context.push('/mode-b'),
+              ),
+
+              const Spacer(),
+
+              // Subdued hint
+              Center(
+                child: Text(
+                  'Select a mode to begin translation',
+                  style: TextStyle(
+                    color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                const Spacer(),
-                Icon(Icons.arrow_forward, color: color),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
+}
+
+class _ModeSelectionCard extends StatelessWidget {
+  const _ModeSelectionCard({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBgColor,
+    required this.cardBgColor,
+    required this.cardBorderColor,
+    required this.titleColor,
+    required this.subtitleColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBgColor;
+  final Color cardBgColor;
+  final Color cardBorderColor;
+  final Color titleColor;
+  final Color subtitleColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          decoration: BoxDecoration(
+            color: cardBgColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: cardBorderColor, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Circular icon container
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 20),
+
+              // Title and Subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: titleColor,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: subtitleColor,
+                        fontSize: 13,
+                        height: 1.35,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Trailing chevron
+              Icon(
+                Icons.chevron_right_rounded,
+                color: subtitleColor,
+                size: 26,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

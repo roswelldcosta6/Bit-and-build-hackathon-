@@ -192,7 +192,18 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Speak to Sign'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Back',
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              Navigator.of(context).pushReplacementNamed('/home');
+            }
+          },
+        ),
+        title: const Text('Text to Sign'),
         actions: [
           IconButton(
             tooltip: 'Initial Pose (Hello)',

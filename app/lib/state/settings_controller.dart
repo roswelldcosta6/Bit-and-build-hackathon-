@@ -6,7 +6,7 @@ enum SpeechLanguage { english, hindi, both }
 class AppSettings {
   const AppSettings({
     this.darkMode = false,
-    this.fontScale = 1,
+    this.fontScale = 1.0,
     this.speechLanguage = SpeechLanguage.both,
     String? apiBaseUrl,
   }) : apiBaseUrl =
@@ -15,6 +15,7 @@ class AppSettings {
   final double fontScale;
   final SpeechLanguage speechLanguage;
   final String apiBaseUrl;
+
   AppSettings copyWith({
     bool? darkMode,
     double? fontScale,
@@ -29,9 +30,16 @@ class AppSettings {
 }
 
 class SettingsNotifier extends Notifier<AppSettings> {
+  // Persistent in-memory cache across rebuilds and route transitions
+  static AppSettings _persistent = const AppSettings(darkMode: false);
+
   @override
-  AppSettings build() => const AppSettings();
-  void update(AppSettings value) => state = value;
+  AppSettings build() => _persistent;
+
+  void update(AppSettings value) {
+    _persistent = value;
+    state = value;
+  }
 }
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
