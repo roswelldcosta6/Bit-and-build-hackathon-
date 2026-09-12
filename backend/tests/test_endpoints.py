@@ -1,4 +1,5 @@
 import pytest
+import uuid
 from fastapi.testclient import TestClient
 import sys
 import os
@@ -173,3 +174,111 @@ def test_stt_empty_audio_returns_empty_text():
     result = transcribe_audio_bytes(b"")
     assert result["text"] == ""
     assert result["confidence"] == 0.0
+
+
+def test_auth_registration_and_login_flow():
+    import uuid
+    unique_email = f"test_{uuid.uuid4().hex[:8]}@signbridge.org"
+    password = "StrongPassword123!"
+
+    # 1. Register new user
+    reg_resp = client.post(
+        "/auth/register",
+        json={
+            "email": unique_email,
+            "password": password,
+            "full_name": "Test Signer",
+            "role": "deaf_user",
+            "preferred_lang": "hi",
+        },
+    )
+    assert reg_resp.status_code == 200
+    reg_data = reg_resp.json()
+    assert "token" in reg_data
+    assert reg_data["user"]["email"] == unique_email
+    assert reg_data["user"]["preferred_lang"] == "hi"
+
+    # 2. Duplicate registration must fail with 409
+    dup_resp = client.post(
+        "/auth/register",
+        json={
+            "email": unique_email,
+            "password": password,
+            "full_name": "Duplicate Signer",
+        },
+    )
+    assert dup_resp.status_code == 409
+
+    # 3. Login with correct password
+    login_resp = client.post(
+        "/auth/login",
+        json={"email": unique_email, "password": password},
+    )
+    assert login_resp.status_code == 200
+    login_data = login_resp.json()
+    assert "token" in login_data
+    token = login_data["token"]
+
+    # 4. Login with wrong password must fail with 401
+    bad_login = client.post(
+        "/auth/login",
+        json={"email": unique_email, "password": "WrongPassword!"},
+    )
+    assert bad_login.status_code == 401
+
+    # 5. Get current user profile
+    me_resp = client.get(
+        "/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert me_resp.status_code == 200
+    me_data = me_resp.json()
+    assert me_data["email"] == unique_email
+    assert me_data["full_name"] == "Test Signer"
+
+
+def test_auth_rejects_malformed_email():
+    resp = client.post(
+        "/auth/register",
+        json={
+            "email": "not-an-email",
+            "password": "StrongPassword123!",
+            "full_name": "Bad Email",
+        },
+    )
+    assert resp.status_code == 400
+
+
+def test_auth_rejects_short_password():
+    resp = client.post(
+        "/auth/register",
+        json={
+            "email": f"short_{uuid.uuid4().hex[:8]}@signbridge.org",
+            "password": "abc",
+            "full_name": "Short Password",
+        },
+    )
+    # 422: Pydantic min_length on the schema fires before the handler
+    assert resp.status_code == 422
+
+
+def test_auth_rejects_unknown_role_and_lang():
+    resp = client.post(
+        "/auth/register",
+        json={
+            "email": f"role_{uuid.uuid4().hex[:8]}@signbridge.org",
+            "password": "StrongPassword123!",
+            "full_name": "Bad Role",
+            "role": "super_admin",
+        },
+    )
+    assert resp.status_code == 422
+
+
+def test_auth_me_requires_token():
+    resp = client.get("/auth/me")
+    assert resp.status_code == 401
+
+    bad = client.get("/auth/me", headers={"Authorization": "Bearer sb_invalid_token"})
+    assert bad.status_code == 401
+

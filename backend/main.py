@@ -4,11 +4,12 @@ Author: Person 3 (Backend + NLP Engineer)
 Framework: FastAPI
 """
 
+import re
 import uuid
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
@@ -24,11 +25,25 @@ from models.schemas import (
     VocabularyResponse,
     SkeletalPoseResponse,
     AvatarAnimationAction,
+    UserRegisterRequest,
+    UserLoginRequest,
+    UserProfile,
+    AuthResponse,
 )
 from vocabulary import get_all_vocabulary, get_sign_metadata
 from gloss_mapper import text_to_isl_gloss
 from whisper_stt import transcribe_audio_bytes
 from avatar_engine import generate_skeletal_animation, get_avatar_web_preview_html
+from database import (
+    create_user,
+    get_user_by_email,
+    get_user_by_id,
+    verify_password,
+    create_session,
+    get_session,
+    save_history,
+    fetch_history,
+)
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -50,6 +65,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Pragmatic email validation: local@domain.tld with a 2+ letter TLD.
+_EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$")
+
 
 # In-Memory History Storage (can be linked to MongoDB Atlas)
 _HISTORY_STORE: Dict[str, List[HistoryItem]] = {}
@@ -96,6 +115,103 @@ def get_avatar_poses(gloss: str):
     return generate_skeletal_animation(gloss.upper())
 
 
+# ==============================================================================
+# Authentication & User Profile Routes (MongoDB)
+# ==============================================================================
+@app.post("/auth/register", response_model=AuthResponse, tags=["Authentication"])
+def register_user(payload: UserRegisterRequest):
+    """
+    Registers a new user in MongoDB with salted PBKDF2 password hashing.
+    Validates email format, password strength, and uniqueness.
+    """
+    email_clean = payload.email.strip().lower()
+    if not _EMAIL_RE.match(email_clean):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please provide a valid email address.",
+        )
+
+    if len(payload.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters long.",
+        )
+
+    user = create_user(
+        email=email_clean,
+        password=payload.password,
+        full_name=payload.full_name,
+        role=payload.role,
+        preferred_lang=payload.preferred_lang,
+    )
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email address already exists.",
+        )
+
+    token = create_session(user["user_id"])
+    return AuthResponse(
+        token=token,
+        user=UserProfile(**user),
+        message="Account created successfully.",
+    )
+
+
+@app.post("/auth/login", response_model=AuthResponse, tags=["Authentication"])
+def login_user(payload: UserLoginRequest):
+    """
+    Authenticates user with MongoDB and returns a session token.
+    """
+    email_clean = payload.email.strip().lower()
+    user_doc = get_user_by_email(email_clean)
+    if not user_doc or not verify_password(payload.password, user_doc.get("password_hash", "")):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+        )
+
+    token = create_session(user_doc["user_id"])
+    safe_user = dict(user_doc)
+    safe_user.pop("password_hash", None)
+    return AuthResponse(
+        token=token,
+        user=UserProfile(**safe_user),
+        message="Login successful.",
+    )
+
+
+@app.get("/auth/me", response_model=UserProfile, tags=["Authentication"])
+def get_current_user(authorization: Optional[str] = Header(None)):
+    """
+    Returns the profile of the authenticated user from MongoDB.
+    """
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header.",
+        )
+    
+    token = authorization.replace("Bearer ", "").strip()
+    session = get_session(token)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session.",
+        )
+
+    user = get_user_by_id(session["user_id"])
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    safe_user = dict(user)
+    safe_user.pop("password_hash", None)
+    return UserProfile(**safe_user)
+
+
 @app.post("/text-to-isl", response_model=ISLGlossResponse, tags=["Mode B: Speak/Text -> Sign"])
 def convert_text_to_isl(payload: TextToISLRequest, session_id: Optional[str] = "default"):
     """
@@ -110,7 +226,7 @@ def convert_text_to_isl(payload: TextToISLRequest, session_id: Optional[str] = "
 
     result = text_to_isl_gloss(payload.text, explicit_lang=payload.lang)
 
-    # Save to history
+    # Save to MongoDB history
     item = HistoryItem(
         id=str(uuid.uuid4())[:8],
         timestamp=datetime.now(timezone.utc).isoformat(),
@@ -120,9 +236,7 @@ def convert_text_to_isl(payload: TextToISLRequest, session_id: Optional[str] = "
         detected_lang=result["detected_lang"],
         glosses=result["glosses"],
     )
-    if session_id not in _HISTORY_STORE:
-        _HISTORY_STORE[session_id] = []
-    _HISTORY_STORE[session_id].append(item)
+    save_history(session_id, item.model_dump())
 
     return ISLGlossResponse(**result)
 
@@ -162,7 +276,7 @@ async def convert_speech_to_isl(
     # Pass transcribed text through the ISL Gloss Mapper
     isl_result = text_to_isl_gloss(text, explicit_lang=detected_lang)
 
-    # Save to history
+    # Save to MongoDB history
     item = HistoryItem(
         id=str(uuid.uuid4())[:8],
         timestamp=datetime.now(timezone.utc).isoformat(),
@@ -172,9 +286,7 @@ async def convert_speech_to_isl(
         detected_lang=detected_lang,
         glosses=isl_result["glosses"],
     )
-    if session_id not in _HISTORY_STORE:
-        _HISTORY_STORE[session_id] = []
-    _HISTORY_STORE[session_id].append(item)
+    save_history(session_id, item.model_dump())
 
     return ISLGlossResponse(**isl_result)
 
@@ -193,8 +305,6 @@ def predict_gesture(payload: PredictRequest):
         )
 
     # Heuristic & mock fallback classifier for demonstration.
-    # In production this endpoint loads Person 1's exported model.tflite and
-    # runs the same inference the app performs on-device.
     flat_values = [v for frame in frames for v in frame if isinstance(v, (int, float))]
     avg_val = sum(flat_values) / len(flat_values) if flat_values else 0.5
 
@@ -220,8 +330,9 @@ def predict_gesture(payload: PredictRequest):
 
 @app.get("/history/{session_id}", response_model=HistoryListResponse, tags=["Session History"])
 def get_session_history(session_id: str):
-    """Retrieves chronological translation items for a session."""
-    items = _HISTORY_STORE.get(session_id, [])
+    """Retrieves chronological translation items for a session from MongoDB."""
+    items_raw = fetch_history(session_id)
+    items = [HistoryItem(**item) for item in items_raw]
     return HistoryListResponse(
         session_id=session_id,
         count=len(items),
@@ -231,12 +342,10 @@ def get_session_history(session_id: str):
 
 @app.post("/history", response_model=HistoryItem, tags=["Session History"])
 def add_history_entry(item: HistoryItem, session_id: Optional[str] = "default"):
-    """Manually logs a translation record (e.g. from on-device Mode A)."""
+    """Manually logs a translation record into MongoDB."""
     if not item.id:
         item.id = str(uuid.uuid4())[:8]
-    if session_id not in _HISTORY_STORE:
-        _HISTORY_STORE[session_id] = []
-    _HISTORY_STORE[session_id].append(item)
+    save_history(session_id, item.model_dump())
     return item
 
 

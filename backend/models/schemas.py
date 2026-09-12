@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Literal, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -101,3 +101,34 @@ class VocabularyResponse(BaseModel):
     total: int
     categories: List[str]
     vocabulary: List[VocabularyItem]
+
+
+class UserRegisterRequest(BaseModel):
+    email: str = Field(..., description="User email address", json_schema_extra={"example": "user@signbridge.org"})
+    password: str = Field(..., min_length=6, description="Password (min 6 chars)", json_schema_extra={"example": "Secret123!"})
+    full_name: str = Field(..., min_length=2, description="User full name", json_schema_extra={"example": "Roswald Dcosta"})
+    role: Literal["deaf_user", "hearing_peer", "interpreter", "healthcare_worker"] = Field(
+        default="deaf_user",
+        description="deaf_user | hearing_peer | interpreter | healthcare_worker",
+    )
+    preferred_lang: Literal["en", "hi"] = Field(default="en", description="'en' or 'hi'")
+
+
+class UserLoginRequest(BaseModel):
+    email: str = Field(..., description="User email address", json_schema_extra={"example": "user@signbridge.org"})
+    password: str = Field(..., description="Password")
+
+
+class UserProfile(BaseModel):
+    user_id: str
+    email: str
+    full_name: str
+    role: str
+    preferred_lang: str
+    created_at: str
+
+
+class AuthResponse(BaseModel):
+    token: str
+    user: UserProfile
+    message: str
