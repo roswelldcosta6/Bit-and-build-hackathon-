@@ -203,7 +203,7 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
             }
           },
         ),
-        title: const Text('Speak to Sign'),
+        title: const Text('Text to Sign'),
         actions: [
           IconButton(
             tooltip: 'Initial Pose (Hello)',

@@ -119,17 +119,17 @@ class LandingScreen extends StatelessWidget {
                     child: _MiniFeatureCard(
                       icon: Icons.videocam_rounded,
                       color: const Color(0xFFD97706),
-                      title: 'Sign → Speak',
+                      title: 'Sign → Text',
                       desc: 'Camera to text & audio',
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _MiniFeatureCard(
-                      icon: Icons.mic_rounded,
+                      icon: Icons.translate_rounded,
                       color: const Color(0xFF0D9488),
-                      title: 'Speak → Sign',
-                      desc: 'Speech to 3D avatar',
+                      title: 'Text → Sign',
+                      desc: 'Text/speech to 3D avatar',
                     ),
                   ),
                 ],

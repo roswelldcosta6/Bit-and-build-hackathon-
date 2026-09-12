@@ -81,17 +81,17 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // Card 2: Speak → Sign
+              // Card 2: Text → Sign
               _ModeSelectionCard(
-                icon: Icons.mic_rounded,
+                icon: Icons.translate_rounded,
                 iconColor: const Color(0xFF10B981),
                 iconBgColor: isDark ? const Color(0xFF132B25) : const Color(0xFFD1FAE5),
                 cardBgColor: cardBgColor,
                 cardBorderColor: cardBorderColor,
                 titleColor: textColor,
                 subtitleColor: subtextColor,
-                title: 'Speak → Sign',
-                subtitle: 'Hindi/English speech to\nISL avatar',
+                title: 'Text → Sign',
+                subtitle: 'Hindi/English text or speech to\nISL avatar',
                 onTap: () => context.push('/mode-b'),
               ),
 
