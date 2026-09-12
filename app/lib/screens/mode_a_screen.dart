@@ -188,6 +188,37 @@ class _ModeAScreenState extends ConsumerState<ModeAScreen>
             ),
             const SizedBox(height: 14),
 
+            // Start / stop recognition — kept directly under the camera so
+            // the control is always above the fold, on every screen size.
+            // Both buttons override the theme's infinite-min-width button
+            // style, which cannot lay out inside a Row.
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _toggleProcessing,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                      backgroundColor:
+                          running ? Theme.of(context).colorScheme.error : null,
+                    ),
+                    icon: Icon(running ? Icons.stop : Icons.play_arrow),
+                    label: Text(running ? 'Stop' : 'Start signing'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonalIcon(
+                  onPressed: state.sentenceEn.isNotEmpty ? _speakTTS : null,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                  ),
+                  icon: const Icon(Icons.record_voice_over_outlined),
+                  label: const Text('Speak'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
             // Bilingual recognition card
             Card(
               child: Padding(
@@ -209,17 +240,22 @@ class _ModeAScreenState extends ConsumerState<ModeAScreen>
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const Spacer(),
-                        Text(
-                          state.currentResult != null
-                              ? '${(state.confidence * 100).toInt()}% match'
-                              : running
-                              ? 'Watching…'
-                              : 'Waiting',
-                          style: TextStyle(
-                            color: state.currentResult != null
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
-                            fontWeight: FontWeight.w700,
+                        Flexible(
+                          flex: 4,
+                          child: Text(
+                            state.currentResult != null
+                                ? '${(state.confidence * 100).toInt()}% match'
+                                : running
+                                ? 'Watching…'
+                                : 'Waiting',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: state.currentResult != null
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
@@ -312,31 +348,7 @@ class _ModeAScreenState extends ConsumerState<ModeAScreen>
                       ),
               ),
             ),
-            const SizedBox(height: 14),
-
-            // Live controls
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _toggleProcessing,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: running
-                          ? Theme.of(context).colorScheme.error
-                          : null,
-                    ),
-                    icon: Icon(running ? Icons.stop : Icons.play_arrow),
-                    label: Text(running ? 'Stop' : 'Start signing'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton.tonalIcon(
-                  onPressed: state.sentenceEn.isNotEmpty ? _speakTTS : null,
-                  icon: const Icon(Icons.record_voice_over_outlined),
-                  label: const Text('Speak'),
-                ),
-              ],
-            ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
