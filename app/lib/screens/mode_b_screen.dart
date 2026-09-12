@@ -20,8 +20,9 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
 
   bool _loading = true;
   bool _speechInitialized = false;
+  bool _userWantsMic = false;
   bool _listening = false;
-  String _speechLocale = "en_IN"; // "en_IN" for Indian English / Hinglish, "hi_IN" for Hindi
+  String _speechLocale = "en-IN"; // "en-IN" for Indian English / Hinglish, "hi-IN" for Hindi
   bool _submitting = false;
   String? _error;
 
@@ -127,85 +128,72 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
   }
 
   Future<void> _toggleSpeech() async {
-    // If currently listening, stop
-    if (_listening) {
-      await _speech.stop();
-      if (mounted) setState(() => _listening = false);
+    // 1. If currently listening, stop
+    if (_listening || _userWantsMic) {
+      _userWantsMic = false;
+      setState(() => _listening = false);
+      try {
+        await _speech.stop();
+      } catch (_) {}
       return;
     }
 
-    // 1. Explicitly check / request microphone permission on mobile
+    _userWantsMic = true;
+    setState(() {
+      _listening = true;
+      _error = null;
+    });
+
+    // 2. Request microphone permission explicitly on Mobile
     if (!kIsWeb) {
       final status = await Permission.microphone.status;
       if (!status.isGranted) {
         final req = await Permission.microphone.request();
         if (!req.isGranted) {
+          _userWantsMic = false;
           if (mounted) {
             setState(() {
-              _error = "Microphone permission denied. Please allow microphone in settings.";
+              _listening = false;
+              _error = "Microphone permission required for voice input.";
             });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Microphone permission is required for speech input."),
-                backgroundColor: Colors.redAccent,
-              ),
-            );
           }
           return;
         }
       }
     }
 
-    // 2. Initialize speech-to-text if not done yet
+    // 3. Initialize speech-to-text if not done yet
     if (!_speechInitialized) {
       try {
         _speechInitialized = await _speech.initialize(
-          onStatus: (status) {
-            if (status == "notListening" || status == "done") {
-              if (mounted) setState(() => _listening = false);
-            }
-          },
-          onError: (errorNotification) {
-            if (mounted) {
-              setState(() {
-                _listening = false;
-                if (errorNotification.errorMsg.contains("not-allowed") ||
-                    errorNotification.errorMsg.contains("permission")) {
-                  _error = "Microphone permission denied. Please click the mic icon in your address bar to allow access.";
-                } else if (errorNotification.errorMsg.contains("no-speech")) {
-                  // User stayed silent, no hard error
-                } else {
-                  _error = "Speech recognition: ${errorNotification.errorMsg}";
-                }
-              });
-            }
-          },
+          onStatus: _onSpeechStatus,
+          onError: _onSpeechError,
         );
       } catch (e) {
-        if (mounted) {
-          setState(() => _error = "Speech recognition initialization error: $e");
-        }
-        return;
+        _speechInitialized = false;
       }
     }
 
     if (!_speechInitialized) {
+      _userWantsMic = false;
       if (mounted) {
-        setState(() => _error = "Microphone access not available or denied by user.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Microphone access is not available or permission was denied."),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        setState(() {
+          _listening = false;
+          _error = "Microphone access not available. Please allow mic permissions in browser settings.";
+        });
       }
       return;
     }
 
-    // 3. Start listening and paste recognized words into the text field
+    // 4. Start continuous listening loop
+    _startListeningLoop();
+  }
+
+  Future<void> _startListeningLoop() async {
+    if (!_userWantsMic || !mounted) return;
+
     setState(() {
       _listening = true;
-      _error = null;
     });
 
     try {
@@ -213,7 +201,6 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
         onResult: (result) {
           if (mounted && result.recognizedWords.isNotEmpty) {
             setState(() {
-              // Paste transcribed speech directly into the text field
               _text.text = result.recognizedWords;
               _text.selection = TextSelection.fromPosition(
                 TextPosition(offset: _text.text.length),
@@ -228,13 +215,59 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
           localeId: _speechLocale,
         ),
       );
-    } catch (e) {
+    } catch (_) {
+      if (_userWantsMic && mounted) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (_userWantsMic && mounted) _startListeningLoop();
+        });
+      }
+    }
+  }
+
+  void _onSpeechStatus(String status) {
+    // Keep mic ON until the user presses the stop button!
+    // If the browser ends session due to pause or silence, immediately restart:
+    if (_userWantsMic && (status == "notListening" || status == "done")) {
+      Future.delayed(const Duration(milliseconds: 250), () {
+        if (_userWantsMic && mounted) {
+          _startListeningLoop();
+        }
+      });
+    }
+  }
+
+  void _onSpeechError(dynamic errorNotification) {
+    final msg = errorNotification?.errorMsg?.toString().toLowerCase() ?? "";
+
+    // User requested to remove network error - suppress network, no-speech, and aborted
+    if (msg.contains("network") || msg.contains("no-speech") || msg.contains("aborted")) {
+      if (_userWantsMic && mounted) {
+        if (_speechLocale == "en-IN" && msg.contains("network")) {
+          // If en-IN had cloud lookup glitch on Edge, seamlessly try en-US
+          _speechLocale = "en-US";
+        }
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (_userWantsMic && mounted) _startListeningLoop();
+        });
+      }
+      return;
+    }
+
+    if (msg.contains("not-allowed") || msg.contains("permission")) {
+      _userWantsMic = false;
       if (mounted) {
         setState(() {
           _listening = false;
-          _error = "Could not start listening: $e";
+          _error = "Microphone permission denied. Please allow microphone access in your browser.";
         });
       }
+      return;
+    }
+
+    if (_userWantsMic && mounted) {
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (_userWantsMic && mounted) _startListeningLoop();
+      });
     }
   }
 
@@ -556,7 +589,10 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                     ],
                   ),
 
-                  if (_error != null) ...[
+                  if (_error != null &&
+                      !_error!.toLowerCase().contains("network") &&
+                      !_error!.toLowerCase().contains("no-speech") &&
+                      !_error!.toLowerCase().contains("speech recognition")) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(10),
