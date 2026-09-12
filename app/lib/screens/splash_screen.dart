@@ -42,7 +42,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void _routeWhenReady() {
     if (!_minDelayDone || _routed || !mounted) return;
     _routed = true;
-    context.go(authGate.value ? '/' : '/login');
+    // Signed in -> straight to the app; otherwise show the public landing
+    // page (Get Started leads into the login gate).
+    context.go(authGate.value ? '/' : '/landing');
   }
 
   @override
