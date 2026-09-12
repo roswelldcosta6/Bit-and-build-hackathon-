@@ -449,7 +449,7 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                               ),
                             ),
 
-                          // Text field
+                          // Text field with direct mic inside suffixIcon
                           TextField(
                             controller: _text,
                             decoration: InputDecoration(
@@ -457,10 +457,27 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                                   ? "जैसे: धन्यवाद, घर कहाँ है, मत जाओ"
                                   : "e.g. Thank you, Where is home, Come here",
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              suffixIcon: IconButton(
-                                icon: const Icon(Icons.send_rounded),
-                                onPressed: _submitting ? null : () => _translateText(),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: _listening
+                                        ? "Stop listening"
+                                        : "Tap to speak (${_speechLocale == 'hi_IN' ? 'Hindi' : 'English / Hinglish'})",
+                                    icon: Icon(
+                                      _listening ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                                      color: _listening ? Colors.red : const Color(0xFF10B981),
+                                      size: 26,
+                                    ),
+                                    onPressed: _toggleSpeech,
+                                  ),
+                                  IconButton(
+                                    tooltip: "Translate to Sign",
+                                    icon: const Icon(Icons.send_rounded),
+                                    onPressed: _submitting ? null : () => _translateText(),
+                                  ),
+                                ],
                               ),
                             ),
                             onSubmitted: (_) => _translateText(),
@@ -468,49 +485,38 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                           ),
                           const SizedBox(height: 10),
 
-                          // Action row: Translate Button + Microphone Button
+                          // Action row: Translate Button + Full Speech Mic Button
                           Row(
                             children: [
                               Expanded(
+                                flex: 3,
                                 child: FilledButton.icon(
                                   onPressed: _submitting ? null : () => _translateText(),
                                   icon: _submitting
-                                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                                       : const Icon(Icons.translate_rounded, size: 18),
                                   label: Text(_submitting ? "Translating…" : "Translate to Sign"),
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              Tooltip(
-                                message: _listening
-                                    ? "Stop listening"
-                                    : "Speak in ${_speechLocale == 'hi_IN' ? 'Hindi' : 'English / Hinglish'}",
-                                child: FilledButton.tonal(
+                              Expanded(
+                                flex: 2,
+                                child: FilledButton.icon(
                                   onPressed: _toggleSpeech,
                                   style: FilledButton.styleFrom(
                                     backgroundColor: _listening
-                                        ? Colors.red.withValues(alpha: 0.2)
-                                        : const Color(0xFF10B981).withValues(alpha: 0.15),
-                                    foregroundColor: _listening ? Colors.red : const Color(0xFF10B981),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                        ? Colors.red
+                                        : const Color(0xFF10B981),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        _listening ? Icons.stop_rounded : Icons.mic_rounded,
-                                        color: _listening ? Colors.red : const Color(0xFF10B981),
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        _listening ? "Stop" : "Mic",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: _listening ? Colors.red : const Color(0xFF10B981),
-                                        ),
-                                      ),
-                                    ],
+                                  icon: Icon(
+                                    _listening ? Icons.stop_rounded : Icons.mic_rounded,
+                                    size: 20,
+                                  ),
+                                  label: Text(
+                                    _listening ? "Stop Mic" : "Speak Mic",
+                                    style: const TextStyle(fontWeight: FontWeight.w700),
                                   ),
                                 ),
                               ),
