@@ -20,3 +20,12 @@ Thumbs.db
 
 # Freebuff workspace metadata
 .freebuff/
+
+# Flutter & Dart ephemeral files
+**/android/local.properties
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/build/
+**/ios/Flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+

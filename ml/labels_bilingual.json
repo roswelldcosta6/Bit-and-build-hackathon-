@@ -1,0 +1,654 @@
+{
+  "0": {
+    "en": "Zero (0)",
+    "hi": "शून्य (०)"
+  },
+  "1": {
+    "en": "One (1)",
+    "hi": "एक (१)"
+  },
+  "2": {
+    "en": "Two (2)",
+    "hi": "दो (२)"
+  },
+  "3": {
+    "en": "Three (3)",
+    "hi": "तीन (३)"
+  },
+  "4": {
+    "en": "Four (4)",
+    "hi": "चार (४)"
+  },
+  "5": {
+    "en": "Five (5)",
+    "hi": "पाँच (५)"
+  },
+  "6": {
+    "en": "Six (6)",
+    "hi": "छह (६)"
+  },
+  "7": {
+    "en": "Seven (7)",
+    "hi": "सात (७)"
+  },
+  "8": {
+    "en": "Eight (8)",
+    "hi": "आठ (८)"
+  },
+  "9": {
+    "en": "Nine (9)",
+    "hi": "नौ (९)"
+  },
+  "A": {
+    "en": "A",
+    "hi": "ए"
+  },
+  "B": {
+    "en": "B",
+    "hi": "बी"
+  },
+  "C": {
+    "en": "C",
+    "hi": "सी"
+  },
+  "D": {
+    "en": "D",
+    "hi": "डी"
+  },
+  "E": {
+    "en": "E",
+    "hi": "ई"
+  },
+  "F": {
+    "en": "F",
+    "hi": "एफ"
+  },
+  "G": {
+    "en": "G",
+    "hi": "जी"
+  },
+  "H": {
+    "en": "H",
+    "hi": "एच"
+  },
+  "I": {
+    "en": "I",
+    "hi": "आई"
+  },
+  "J": {
+    "en": "J",
+    "hi": "जे"
+  },
+  "K": {
+    "en": "K",
+    "hi": "के"
+  },
+  "L": {
+    "en": "L",
+    "hi": "एल"
+  },
+  "M": {
+    "en": "M",
+    "hi": "एम"
+  },
+  "N": {
+    "en": "N",
+    "hi": "एन"
+  },
+  "O": {
+    "en": "O",
+    "hi": "ओ"
+  },
+  "P": {
+    "en": "P",
+    "hi": "पी"
+  },
+  "Q": {
+    "en": "Q",
+    "hi": "क्यू"
+  },
+  "R": {
+    "en": "R",
+    "hi": "आर"
+  },
+  "S": {
+    "en": "S",
+    "hi": "एस"
+  },
+  "T": {
+    "en": "T",
+    "hi": "टी"
+  },
+  "U": {
+    "en": "U",
+    "hi": "यू"
+  },
+  "V": {
+    "en": "V",
+    "hi": "वी"
+  },
+  "W": {
+    "en": "W",
+    "hi": "डब्ल्यू"
+  },
+  "X": {
+    "en": "X",
+    "hi": "एक्स"
+  },
+  "Y": {
+    "en": "Y",
+    "hi": "वाई"
+  },
+  "Z": {
+    "en": "Z",
+    "hi": "ज़ेड"
+  },
+  "AFTER": {
+    "en": "After",
+    "hi": "बाद में"
+  },
+  "AGAIN": {
+    "en": "Again",
+    "hi": "फिर से"
+  },
+  "AGAINST": {
+    "en": "Against",
+    "hi": "खिलाफ"
+  },
+  "AGE": {
+    "en": "Age",
+    "hi": "उम्र"
+  },
+  "ALL": {
+    "en": "All",
+    "hi": "सब / सभी"
+  },
+  "ALONE": {
+    "en": "Alone",
+    "hi": "अकेला"
+  },
+  "ALSO": {
+    "en": "Also",
+    "hi": "भी"
+  },
+  "AND": {
+    "en": "And",
+    "hi": "और"
+  },
+  "ASK": {
+    "en": "Ask",
+    "hi": "पूछना"
+  },
+  "AT": {
+    "en": "At",
+    "hi": "पर"
+  },
+  "BE": {
+    "en": "Be",
+    "hi": "होना"
+  },
+  "BEAUTIFUL": {
+    "en": "Beautiful",
+    "hi": "सुंदर"
+  },
+  "BEFORE": {
+    "en": "Before",
+    "hi": "पहले"
+  },
+  "BEST": {
+    "en": "Best",
+    "hi": "सर्वश्रेष्ठ"
+  },
+  "BETTER": {
+    "en": "Better",
+    "hi": "बेहतर"
+  },
+  "BUSY": {
+    "en": "Busy",
+    "hi": "व्यस्त"
+  },
+  "BUT": {
+    "en": "But",
+    "hi": "लेकिन"
+  },
+  "BYE": {
+    "en": "Bye",
+    "hi": "अलविदा"
+  },
+  "CAN": {
+    "en": "Can",
+    "hi": "सकना"
+  },
+  "CANNOT": {
+    "en": "Cannot",
+    "hi": "नहीं कर सकता"
+  },
+  "CHANGE": {
+    "en": "Change",
+    "hi": "बदलना"
+  },
+  "COLLEGE": {
+    "en": "College",
+    "hi": "कॉलेज"
+  },
+  "COME": {
+    "en": "Come",
+    "hi": "आना"
+  },
+  "COMPUTER": {
+    "en": "Computer",
+    "hi": "कंप्यूटर"
+  },
+  "DAY": {
+    "en": "Day",
+    "hi": "दिन"
+  },
+  "DISTANCE": {
+    "en": "Distance",
+    "hi": "दूरी"
+  },
+  "DO": {
+    "en": "Do",
+    "hi": "करना"
+  },
+  "DO_NOT": {
+    "en": "Do Not",
+    "hi": "मत करो"
+  },
+  "DOES_NOT": {
+    "en": "Does Not",
+    "hi": "नहीं करता"
+  },
+  "EAT": {
+    "en": "Eat",
+    "hi": "खाना"
+  },
+  "ENGINEER": {
+    "en": "Engineer",
+    "hi": "इंजीनियर"
+  },
+  "FIGHT": {
+    "en": "Fight",
+    "hi": "लड़ाई"
+  },
+  "FINISH": {
+    "en": "Finish",
+    "hi": "खत्म"
+  },
+  "FROM": {
+    "en": "From",
+    "hi": "से"
+  },
+  "GLITTER": {
+    "en": "Glitter",
+    "hi": "चमक"
+  },
+  "GO": {
+    "en": "Go",
+    "hi": "जाना"
+  },
+  "GOD": {
+    "en": "God",
+    "hi": "भगवान"
+  },
+  "GOLD": {
+    "en": "Gold",
+    "hi": "सोना (स्वर्ण)"
+  },
+  "GOOD": {
+    "en": "Good",
+    "hi": "अच्छा"
+  },
+  "GREAT": {
+    "en": "Great",
+    "hi": "महान / बहुत अच्छा"
+  },
+  "HAND": {
+    "en": "Hand",
+    "hi": "हाथ"
+  },
+  "HANDS": {
+    "en": "Hands",
+    "hi": "दोनों हाथ"
+  },
+  "HAPPY": {
+    "en": "Happy",
+    "hi": "खुश"
+  },
+  "HELLO": {
+    "en": "Hello",
+    "hi": "नमस्ते"
+  },
+  "HELP": {
+    "en": "Help",
+    "hi": "मदद"
+  },
+  "HER": {
+    "en": "Her",
+    "hi": "उसकी / उसे"
+  },
+  "HERE": {
+    "en": "Here",
+    "hi": "यहाँ"
+  },
+  "HIS": {
+    "en": "His",
+    "hi": "उसका"
+  },
+  "HOME": {
+    "en": "Home",
+    "hi": "घर"
+  },
+  "HOMEPAGE": {
+    "en": "Homepage",
+    "hi": "होमपेज"
+  },
+  "HOW": {
+    "en": "How",
+    "hi": "कैसे"
+  },
+  "INVENT": {
+    "en": "Invent",
+    "hi": "आविष्कार करना"
+  },
+  "IT": {
+    "en": "It",
+    "hi": "यह"
+  },
+  "KEEP": {
+    "en": "Keep",
+    "hi": "रखना"
+  },
+  "LANGUAGE": {
+    "en": "Language",
+    "hi": "भाषा"
+  },
+  "LAUGH": {
+    "en": "Laugh",
+    "hi": "हँसना"
+  },
+  "LEARN": {
+    "en": "Learn",
+    "hi": "सीखना"
+  },
+  "ME": {
+    "en": "Me / I",
+    "hi": "मैं / मुझे"
+  },
+  "MORE": {
+    "en": "More",
+    "hi": "अधिक / और"
+  },
+  "MY": {
+    "en": "My",
+    "hi": "मेरा"
+  },
+  "NAME": {
+    "en": "Name",
+    "hi": "नाम"
+  },
+  "NEXT": {
+    "en": "Next",
+    "hi": "अगला"
+  },
+  "NOT": {
+    "en": "Not",
+    "hi": "नहीं"
+  },
+  "NOW": {
+    "en": "Now",
+    "hi": "अब / अभी"
+  },
+  "OF": {
+    "en": "Of",
+    "hi": "का / की"
+  },
+  "ON": {
+    "en": "On",
+    "hi": "पर"
+  },
+  "OUR": {
+    "en": "Our",
+    "hi": "हमारा"
+  },
+  "OUT": {
+    "en": "Out",
+    "hi": "बाहर"
+  },
+  "PRETTY": {
+    "en": "Pretty",
+    "hi": "प्यारा / सुंदर"
+  },
+  "RIGHT": {
+    "en": "Right",
+    "hi": "सही / दायाँ"
+  },
+  "SAD": {
+    "en": "Sad",
+    "hi": "उदास"
+  },
+  "SAFE": {
+    "en": "Safe",
+    "hi": "सुरक्षित"
+  },
+  "SEE": {
+    "en": "See",
+    "hi": "देखना"
+  },
+  "SELF": {
+    "en": "Self",
+    "hi": "स्वयं / खुद"
+  },
+  "SIGN": {
+    "en": "Sign",
+    "hi": "साइन / संकेत"
+  },
+  "SING": {
+    "en": "Sing",
+    "hi": "गाना"
+  },
+  "SO": {
+    "en": "So",
+    "hi": "इसलिए / तो"
+  },
+  "SOUND": {
+    "en": "Sound",
+    "hi": "ध्वनि / आवाज़"
+  },
+  "STAY": {
+    "en": "Stay",
+    "hi": "रहना / ठहरना"
+  },
+  "STUDY": {
+    "en": "Study",
+    "hi": "पढ़ाई करना"
+  },
+  "TALK": {
+    "en": "Talk",
+    "hi": "बात करना"
+  },
+  "TELEVISION": {
+    "en": "Television",
+    "hi": "टेलीविज़न"
+  },
+  "THANK": {
+    "en": "Thank",
+    "hi": "धन्यवाद"
+  },
+  "THANK_YOU": {
+    "en": "Thank You",
+    "hi": "धन्यवाद / शुक्रिया"
+  },
+  "THAT": {
+    "en": "That",
+    "hi": "वह"
+  },
+  "THEY": {
+    "en": "They",
+    "hi": "वे / वो लोग"
+  },
+  "THIS": {
+    "en": "This",
+    "hi": "यह"
+  },
+  "THOSE": {
+    "en": "Those",
+    "hi": "वे सब"
+  },
+  "TIME": {
+    "en": "Time",
+    "hi": "समय / वक्त"
+  },
+  "TO": {
+    "en": "To",
+    "hi": "को / तक"
+  },
+  "TYPE": {
+    "en": "Type",
+    "hi": "टाइप करना"
+  },
+  "US": {
+    "en": "Us",
+    "hi": "हमें"
+  },
+  "WALK": {
+    "en": "Walk",
+    "hi": "चलना"
+  },
+  "WASH": {
+    "en": "Wash",
+    "hi": "धोना"
+  },
+  "WAY": {
+    "en": "Way",
+    "hi": "रास्ता / तरीका"
+  },
+  "WE": {
+    "en": "We",
+    "hi": "हम"
+  },
+  "WELCOME": {
+    "en": "Welcome",
+    "hi": "स्वागत"
+  },
+  "WHAT": {
+    "en": "What",
+    "hi": "क्या"
+  },
+  "WHEN": {
+    "en": "When",
+    "hi": "कब"
+  },
+  "WHERE": {
+    "en": "Where",
+    "hi": "कहाँ"
+  },
+  "WHICH": {
+    "en": "Which",
+    "hi": "कौन सा"
+  },
+  "WHO": {
+    "en": "Who",
+    "hi": "कौन"
+  },
+  "WHOLE": {
+    "en": "Whole",
+    "hi": "पूरा / संपूर्ण"
+  },
+  "WHOSE": {
+    "en": "Whose",
+    "hi": "किसका"
+  },
+  "WHY": {
+    "en": "Why",
+    "hi": "क्यों"
+  },
+  "WILL": {
+    "en": "Will",
+    "hi": "होगा / करेगा"
+  },
+  "WITH": {
+    "en": "With",
+    "hi": "साथ"
+  },
+  "WITHOUT": {
+    "en": "Without",
+    "hi": "बिना"
+  },
+  "WORDS": {
+    "en": "Words",
+    "hi": "शब्द"
+  },
+  "WORK": {
+    "en": "Work",
+    "hi": "काम"
+  },
+  "WORLD": {
+    "en": "World",
+    "hi": "दुनिया"
+  },
+  "WRONG": {
+    "en": "Wrong",
+    "hi": "गलत"
+  },
+  "YOU": {
+    "en": "You",
+    "hi": "आप / तुम"
+  },
+  "YOUR": {
+    "en": "Your",
+    "hi": "आपका / तुम्हारा"
+  },
+  "YOURSELF": {
+    "en": "Yourself",
+    "hi": "आप खुद"
+  },
+  "HOSPITAL": {
+    "en": "Hospital",
+    "hi": "अस्पताल"
+  },
+  "DOCTOR": {
+    "en": "Doctor",
+    "hi": "डॉक्टर"
+  },
+  "EMERGENCY": {
+    "en": "Emergency",
+    "hi": "आपातकाल"
+  },
+  "POLICE": {
+    "en": "Police",
+    "hi": "पुलिस"
+  },
+  "FIRE": {
+    "en": "Fire",
+    "hi": "आग"
+  },
+  "AMBULANCE": {
+    "en": "Ambulance",
+    "hi": "एम्बुलेंस"
+  },
+  "ACCIDENT": {
+    "en": "Accident",
+    "hi": "दुर्घटना"
+  },
+  "PAIN": {
+    "en": "Pain",
+    "hi": "दर्द"
+  },
+  "MEDICINE": {
+    "en": "Medicine",
+    "hi": "दवा"
+  },
+  "SICK": {
+    "en": "Sick",
+    "hi": "बीमार"
+  },
+  "INJURY": {
+    "en": "Injury",
+    "hi": "चोट"
+  },
+  "DANGER": {
+    "en": "Danger",
+    "hi": "खतरा"
+  }
+}
