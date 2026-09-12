@@ -67,7 +67,18 @@ class _ModeAScreenState extends State<ModeAScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('Sign to Speak'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_rounded),
+        tooltip: 'Back',
+        onPressed: () {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          } else {
+            Navigator.of(context).pushReplacementNamed('/home');
+          }
+        },
+      ),
+      title: const Text('Sign to Text'),
       actions: [
         if (_sentence.isNotEmpty)
           IconButton(
@@ -82,8 +93,8 @@ class _ModeAScreenState extends State<ModeAScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(18, 6, 18, 28),
         children: [
-          AspectRatio(
-            aspectRatio: 1.15,
+          SizedBox(
+            height: 220,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: DecoratedBox(

@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Conversation history')),
+    appBar: AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_rounded),
+        tooltip: 'Back',
+        onPressed: () => context.go('/home'),
+      ),
+      title: const Text('Conversation history'),
+    ),
     body: ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
       children: [
