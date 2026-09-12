@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../state/auth_controller.dart';
 import '../state/settings_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -9,16 +11,90 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final auth = ref.watch(authProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
-          Text(
-            'Accessibility',
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.w800),
+          _SectionLabel('Account'),
+          const SizedBox(height: 10),
+          Card(
+            child: Column(
+              children: [
+                if (auth.isSignedIn) ...[
+                  ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: Text(
+                      auth.user!.fullName,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(auth.user!.email),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.badge_outlined),
+                    title: const Text('Role'),
+                    trailing: Text(
+                      _roleLabel(auth.user!.role),
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.translate),
+                    title: const Text('Preferred language'),
+                    trailing: Text(
+                      auth.user!.preferredLang.toUpperCase(),
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.logout),
+                    title: const Text(
+                      'Sign out',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    onTap: () async {
+                      await ref.read(authProvider.notifier).signOut();
+                      if (context.mounted) context.go('/login');
+                    },
+                  ),
+                ] else ...[
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('You are browsing as a guest.'),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Create an account to keep your translation history and preferences on the server.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: 14),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 44),
+                          child: OutlinedButton(
+                            onPressed: () => context.go('/login'),
+                            child: const Text('Sign in or create an account'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
+          const SizedBox(height: 22),
+          _SectionLabel('Accessibility'),
           const SizedBox(height: 10),
           Card(
             child: Column(
@@ -47,11 +123,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 22),
-          Text(
-            'Sign to Speak',
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
+          _SectionLabel('Sign to Speak'),
           const SizedBox(height: 10),
           Card(
             child: Padding(
@@ -79,11 +151,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 22),
-          Text(
-            'Backend connection',
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
+          _SectionLabel('Backend connection'),
           const SizedBox(height: 10),
           Card(
             child: ListTile(
@@ -102,3 +170,24 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 }
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.3,
+    ),
+  );
+}
+
+String _roleLabel(String role) => switch (role) {
+  'deaf_user' => 'Deaf / Hard of hearing',
+  'hearing_peer' => 'Hearing peer',
+  'interpreter' => 'Interpreter',
+  'healthcare_worker' => 'Healthcare worker',
+  _ => role,
+};

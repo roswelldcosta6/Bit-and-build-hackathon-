@@ -196,7 +196,7 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
         actions: [
           IconButton(
             tooltip: 'Initial Pose (Hello)',
-            icon: const Icon(Icons.front_hand_rounded),
+            icon: const Icon(Icons.front_hand),
             onPressed: () => _avatarController.playToken('HELLO'),
           ),
         ],
@@ -221,20 +221,19 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
               Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .errorContainer
-                      .withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(10),
+                  color: Theme.of(context).colorScheme.surface,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,
                       size: 16,
-                      color: Theme.of(context).colorScheme.onErrorContainer,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -242,9 +241,9 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                         _error!,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                           color:
-                              Theme.of(context).colorScheme.onErrorContainer,
+                              Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -266,27 +265,27 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
               child: Row(
                 children: [
                   _QuickChip(
-                    label: '👋 Hello',
+                    label: 'Hello',
                     onTap: () => _avatarController.playToken('HELLO'),
                   ),
                   _QuickChip(
-                    label: '🏥 Hospital Where',
+                    label: 'Hospital Where',
                     onTap: () => _translateText('Where is the hospital?'),
                   ),
                   _QuickChip(
-                    label: '👨‍⚕️ Doctor Please',
+                    label: 'Doctor Please',
                     onTap: () => _translateText('Doctor please'),
                   ),
                   _QuickChip(
-                    label: '🆘 Emergency Help',
+                    label: 'Emergency Help',
                     onTap: () => _translateText('Emergency help'),
                   ),
                   _QuickChip(
-                    label: '💧 Water Want',
+                    label: 'Water Want',
                     onTap: () => _translateText('I want water'),
                   ),
                   _QuickChip(
-                    label: '🙏 Thank You',
+                    label: 'Thank You',
                     onTap: () => _translateText('Thank you'),
                   ),
                 ],
@@ -304,10 +303,7 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
               decoration: InputDecoration(
                 hintText: 'Type message in English or Hindi...',
                 filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
+                border: const OutlineInputBorder(),
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 suffixIcon: IconButton(
@@ -317,7 +313,7 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                           dimension: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.send_rounded),
+                      : const Icon(Icons.send_outlined),
                 ),
               ),
             ),
@@ -330,13 +326,10 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
                 backgroundColor: _recording
                     ? Theme.of(context).colorScheme.error
                     : null,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
               ),
               onPressed: _submitting ? null : _toggleRecord,
               icon: Icon(
-                _recording ? Icons.stop_rounded : Icons.mic_rounded,
+                _recording ? Icons.stop : Icons.mic_outlined,
               ),
               label: Text(
                 _recording
@@ -364,9 +357,10 @@ class _QuickChip extends StatelessWidget {
       child: ActionChip(
         label: Text(label),
         onPressed: onTap,
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        side: BorderSide(color: Theme.of(context).dividerColor),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
         ),
       ),
     );

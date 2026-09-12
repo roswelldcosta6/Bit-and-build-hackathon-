@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../theme/app_theme.dart';
-
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
   @override
@@ -16,12 +14,9 @@ class HomeScreen extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                color: Theme.of(context).colorScheme.primary,
                 child: const Icon(
-                  Icons.sign_language_rounded,
+                  Icons.sign_language,
                   color: Colors.white,
                 ),
               ),
@@ -49,7 +44,7 @@ class HomeScreen extends StatelessWidget {
           const Text('Choose a translation mode to get started.'),
           const SizedBox(height: 26),
           _ModeCard(
-            color: AppTheme.mint,
+            color: Theme.of(context).colorScheme.primary,
             icon: Icons.videocam_outlined,
             title: 'Sign to Speak',
             subtitle: 'Use the camera to translate ISL into English and Hindi.',
@@ -58,7 +53,7 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _ModeCard(
-            color: Theme.of(context).colorScheme.primary,
+            color: Theme.of(context).colorScheme.onSurface,
             icon: Icons.record_voice_over_outlined,
             title: 'Speak to Sign',
             subtitle:
@@ -126,11 +121,8 @@ class _ModeCard extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(13),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: .14),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, color: color, size: 31),
+              color: color.withValues(alpha: .12),
+              child: Icon(icon, color: color, size: 30),
             ),
             const SizedBox(height: 18),
             Text(
