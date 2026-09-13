@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/MediaPipe-Landmarks-FF6F00?style=for-the-badge" alt="MediaPipe"/>
   <img src="https://img.shields.io/badge/Whisper-STT-412991?style=for-the-badge&logo=openai&logoColor=white" alt="Whisper"/>
-  <img src="https://img.shields.io/badge/License-MIT-lightgrey?style=for-the-badge" alt="License"/>
+  
 </p>
 
 <p align="center"><b>Built for the Bit & Build Hackathon — Track 1: ACCESS</b></p>
@@ -284,10 +284,8 @@ The long-term goal is to build this **with** the Deaf community, not simply for 
 
 ## 👥 Team
 
-*Add your team members here.*
+Runtime Terror
 
 ---
 
-## 📜 License
 
-MIT License. See `LICENSE` for details.
