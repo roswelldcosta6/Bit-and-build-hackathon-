@@ -42,6 +42,12 @@ base class WebSignRecognitionNotifier extends SignRecognitionNotifierBase {
   }
 
   @override
+  Future<void> speakCurrentOrSentence() async {}
+
+  @override
+  Future<void> switchCamera() async {} // Camera toggle is mobile-only
+
+  @override
   dynamic get cameraController => null;
 
   @override

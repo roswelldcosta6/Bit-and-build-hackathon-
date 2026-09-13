@@ -54,7 +54,9 @@ base class SignRecognitionNotifier extends SignRecognitionNotifierBase {
 
     try {
       _cameraService ??= CameraService();
-      await _cameraService!.initialize();
+      await _cameraService!.initialize(
+        useFrontCamera: state.usingFrontCamera,
+      );
 
       await _tfliteService.loadModel();
 
@@ -90,6 +92,17 @@ base class SignRecognitionNotifier extends SignRecognitionNotifierBase {
     );
   }
 
+  /// Switch between front and back cameras on the fly.
+  @override
+  Future<void> switchCamera() async {
+    if (_cameraService == null || !state.isProcessing) return;
+    final newFront = !state.usingFrontCamera;
+    final success = await _cameraService!.switchCamera(onImage: _onCameraFrame);
+    if (success && !_disposed) {
+      state = state.copyWith(usingFrontCamera: newFront);
+    }
+  }
+
   /// Process one camera frame through the pipeline.
   Future<void> _onCameraFrame(CameraImage image) async {
     // Skip frames while the previous one is still in flight — ML Kit cannot
@@ -98,48 +111,72 @@ base class SignRecognitionNotifier extends SignRecognitionNotifierBase {
     _frameBusy = true;
 
     try {
-      final keypoints = await _cameraService?.extractKeypoints(image);
-      if (keypoints == null || _disposed) return;
-
-      final result = _tfliteService.addFrame(keypoints);
-      if (result == null || _disposed) return;
-
-      final newSentence = [...state.sentence, result];
-      final sentenceEn = newSentence.map((r) => r.labelEn).join(' ');
-      final sentenceHi = newSentence.map((r) => r.labelHi).join(' ');
+      final keypointsResult = await _cameraService?.extractKeypoints(image);
+      if (keypointsResult == null || _disposed) {
+        state = state.copyWith(visualLandmarks: const [], handsDetected: false);
+        return;
+      }
 
       state = state.copyWith(
-        currentResult: result,
-        sentence: newSentence,
-        sentenceEn: sentenceEn,
-        sentenceHi: sentenceHi,
-        confidence: result.confidence,
+        visualLandmarks: keypointsResult.visualLandmarks,
+        handsDetected: keypointsResult.handsDetected,
       );
 
-      // Speak the recognized sign aloud (best-effort, never blocks frames).
-      unawaited(
-        _ttsService?.speakSign(
-          textEn: result.labelEn,
-          textHi: result.labelHi,
-        ),
-      );
+      final result = _tfliteService.addFrame(keypointsResult.modelInput);
+      if (result == null || _disposed) return;
 
-      // Log to backend history (fire-and-forget; guests/offline are fine).
-      ApiService? api;
-      try {
-        api = ref.read(apiServiceProvider);
-      } catch (_) {}
-      if (api != null) {
-        unawaited(
-          api
-              .addHistoryEntry(
-                mode: 'MODE_A',
-                inputContent: 'Sign: ${result.gloss}',
-                outputContent: '${result.labelEn} / ${result.labelHi}',
-                detectedLang: 'isl',
-                glosses: [result.gloss],
-              )
-              .catchError((_) {}),
+      if (result.isStable) {
+        final lastGloss = state.sentence.isNotEmpty ? state.sentence.last.gloss : null;
+        if (lastGloss != result.gloss) {
+          final newSentence = [...state.sentence, result];
+          final sentenceEn = newSentence.map((r) => r.labelEn).join(' ');
+          final sentenceHi = newSentence.map((r) => r.labelHi).join(' ');
+
+          state = state.copyWith(
+            currentResult: result,
+            sentence: newSentence,
+            sentenceEn: sentenceEn,
+            sentenceHi: sentenceHi,
+            confidence: result.confidence,
+          );
+
+          // Speak the recognized sign aloud (best-effort, never blocks frames).
+          unawaited(
+            _ttsService?.speakSign(
+              textEn: result.labelEn,
+              textHi: result.labelHi,
+            ),
+          );
+
+          // Log to backend history (fire-and-forget; guests/offline are fine).
+          ApiService? api;
+          try {
+            api = ref.read(apiServiceProvider);
+          } catch (_) {}
+          if (api != null) {
+            unawaited(
+              api
+                  .addHistoryEntry(
+                    mode: 'MODE_A',
+                    inputContent: 'Sign: ${result.gloss}',
+                    outputContent: '${result.labelEn} / ${result.labelHi}',
+                    detectedLang: 'isl',
+                    glosses: [result.gloss],
+                  )
+                  .catchError((_) {}),
+            );
+          }
+        } else {
+          state = state.copyWith(
+            currentResult: result,
+            confidence: result.confidence,
+          );
+        }
+      } else {
+        // Real-time live prediction feedback on every frame
+        state = state.copyWith(
+          currentResult: result,
+          confidence: result.confidence,
         );
       }
     } catch (e) {
@@ -160,6 +197,25 @@ base class SignRecognitionNotifier extends SignRecognitionNotifierBase {
       sentenceHi: '',
       confidence: 0.0,
     );
+  }
+
+  /// Speak the current recognition or accumulated sentence aloud via TTS.
+  @override
+  Future<void> speakCurrentOrSentence() async {
+    _ttsService ??= TtsService();
+    await _ttsService!.initialize();
+    _applyLanguagePreference();
+
+    final en = state.sentenceEn.isNotEmpty
+        ? state.sentenceEn
+        : (state.currentResult?.labelEn ?? '');
+    final hi = state.sentenceHi.isNotEmpty
+        ? state.sentenceHi
+        : (state.currentResult?.labelHi ?? '');
+
+    if (en.isNotEmpty || hi.isNotEmpty) {
+      await _ttsService!.speakSign(textEn: en, textHi: hi);
+    }
   }
 
   void _applyLanguagePreference() {

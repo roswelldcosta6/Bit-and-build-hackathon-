@@ -1,3 +1,4 @@
+import "dart:async";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -22,7 +23,9 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
   bool _speechInitialized = false;
   bool _userWantsMic = false;
   bool _listening = false;
-  String _speechLocale = "en-IN"; // "en-IN" for Indian English / Hinglish, "hi-IN" for Hindi
+  // On Android, en-US is the most widely available offline locale. We try en-IN first,
+  // but fall back to en-US on network/locale errors (handled in _onSpeechError).
+  String _speechLocale = kIsWeb ? "en-IN" : "en-US";
   bool _submitting = false;
   String? _error;
 
@@ -32,6 +35,8 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
   bool _done = false;
 
   VideoPlayerController? _videoCtrl;
+  int _playSessionToken = 0;
+  Timer? _videoFallbackTimer;
 
   @override
   void initState() {
@@ -55,6 +60,9 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
     final query = (customText ?? _text.text).trim();
     if (query.isEmpty) return;
     if (customText != null) _text.text = customText;
+
+    _playSessionToken++;
+    _videoFallbackTimer?.cancel();
 
     setState(() {
       _submitting = true;
@@ -81,9 +89,15 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
   }
 
   Future<void> _playFrom(int index) async {
+    _playSessionToken++;
+    final sessionToken = _playSessionToken;
+    _videoFallbackTimer?.cancel();
+
     final glosses = _result?.glossSequence;
     if (glosses == null || index >= glosses.length) {
-      if (mounted) setState(() { _playing = false; _done = true; });
+      if (mounted && sessionToken == _playSessionToken) {
+        setState(() { _playing = false; _done = true; });
+      }
       return;
     }
 
@@ -94,34 +108,75 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
 
     try {
       await newCtrl.initialize();
+      await newCtrl.setLooping(false);
+      await newCtrl.setVolume(1.0);
     } catch (e) {
+      debugPrint("Failed to initialize video $videoPath: $e");
       newCtrl.dispose();
-      if (mounted) {
-        _playFrom(index + 1); // skip missing video
+      if (mounted && sessionToken == _playSessionToken) {
+        _playFrom(index + 1); // skip missing/corrupt video
       }
       return;
     }
 
-    _videoCtrl?.dispose();
-    _videoCtrl = newCtrl;
+    if (!mounted || sessionToken != _playSessionToken) {
+      newCtrl.dispose();
+      return;
+    }
 
-    if (!mounted) { newCtrl.dispose(); return; }
+    final oldCtrl = _videoCtrl;
+    _videoCtrl = newCtrl;
+    oldCtrl?.dispose();
+
     setState(() {});
 
+    bool hasStarted = false;
+    bool hasAdvanced = false;
+
+    void advance() {
+      if (hasAdvanced || !mounted || sessionToken != _playSessionToken) return;
+      hasAdvanced = true;
+      _videoFallbackTimer?.cancel();
+      _playFrom(index + 1);
+    }
+
     newCtrl.addListener(() {
-      if (!mounted) return;
-      if (newCtrl.value.isInitialized &&
+      if (!mounted || sessionToken != _playSessionToken) return;
+      if (newCtrl.value.hasError) {
+        debugPrint("Video playback error on $videoPath: ${newCtrl.value.errorDescription}");
+        advance();
+        return;
+      }
+      if (newCtrl.value.isPlaying) {
+        hasStarted = true;
+      }
+      if (hasStarted &&
+          newCtrl.value.isInitialized &&
           !newCtrl.value.isPlaying &&
-          newCtrl.value.position >= newCtrl.value.duration) {
-        _playFrom(index + 1);
+          newCtrl.value.duration > const Duration(milliseconds: 100) &&
+          (newCtrl.value.position >= newCtrl.value.duration ||
+           (newCtrl.value.duration - newCtrl.value.position).inMilliseconds <= 150)) {
+        advance();
       }
     });
 
     await newCtrl.play();
+
+    // Fallback timer to ensure video always advances smoothly if hardware event is missed
+    final clipDuration = newCtrl.value.duration;
+    if (clipDuration > Duration.zero) {
+      _videoFallbackTimer = Timer(clipDuration + const Duration(milliseconds: 300), () {
+        if (mounted && sessionToken == _playSessionToken && _currentIdx == index) {
+          advance();
+        }
+      });
+    }
   }
 
   void _replay() {
     if (_result != null && _result!.glossSequence.isNotEmpty) {
+      _playSessionToken++;
+      _videoFallbackTimer?.cancel();
       setState(() { _done = false; });
       _playFrom(0);
     }
@@ -168,9 +223,11 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
         _speechInitialized = await _speech.initialize(
           onStatus: _onSpeechStatus,
           onError: _onSpeechError,
+          debugLogging: false,
         );
       } catch (e) {
         _speechInitialized = false;
+        debugPrint('SpeechToText initialize error: $e');
       }
     }
 
@@ -179,7 +236,9 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
       if (mounted) {
         setState(() {
           _listening = false;
-          _error = "Microphone access not available. Please allow mic permissions in browser settings.";
+          _error = kIsWeb
+              ? "Microphone access not available. Please allow mic permissions in your browser settings."
+              : "Speech recognition unavailable. Ensure Google app is installed and up-to-date, or check microphone permissions in Settings.";
         });
       }
       return;
@@ -242,8 +301,8 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
     // User requested to remove network error - suppress network, no-speech, and aborted
     if (msg.contains("network") || msg.contains("no-speech") || msg.contains("aborted")) {
       if (_userWantsMic && mounted) {
-        if (_speechLocale == "en-IN" && msg.contains("network")) {
-          // If en-IN had cloud lookup glitch on Edge, seamlessly try en-US
+        // Silently fall back: en-IN → en-US for both web (cloud) and Android (offline)
+        if (msg.contains("network") || msg.contains("language") || msg.contains("locale")) {
           _speechLocale = "en-US";
         }
         Future.delayed(const Duration(milliseconds: 400), () {
@@ -273,6 +332,7 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
 
   @override
   void dispose() {
+    _videoFallbackTimer?.cancel();
     _text.dispose();
     _speech.stop();
     _videoCtrl?.dispose();
@@ -623,14 +683,15 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
   Widget _buildVideoArea(BuildContext context, bool isDark, String? currentGloss) {
     final ctrl = _videoCtrl;
     if (ctrl != null && ctrl.value.isInitialized) {
+      final aspect = ctrl.value.aspectRatio > 0 ? ctrl.value.aspectRatio : (16 / 9);
       return Stack(
         fit: StackFit.expand,
         children: [
-          FittedBox(
-            fit: BoxFit.cover,
-            child: SizedBox(
-              width: ctrl.value.size.width,
-              height: ctrl.value.size.height,
+          Container(
+            color: Colors.black,
+            alignment: Alignment.center,
+            child: AspectRatio(
+              aspectRatio: aspect,
               child: VideoPlayer(ctrl),
             ),
           ),
