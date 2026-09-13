@@ -3,6 +3,12 @@ allprojects {
         google()
         mavenCentral()
     }
+    configurations.all {
+        resolutionStrategy {
+            exclude(group = "org.tensorflow", module = "tensorflow-lite-gpu")
+            exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
+        }
+    }
 }
 
 val newBuildDir: Directory =
@@ -17,6 +23,26 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    configurations.all {
+        resolutionStrategy {
+            exclude(group = "org.tensorflow", module = "tensorflow-lite-gpu")
+            exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
+            force("androidx.concurrent:concurrent-futures:1.2.0")
+        }
+    }
+    plugins.withId("com.android.library") {
+        dependencies {
+            add("implementation", "androidx.concurrent:concurrent-futures:1.2.0")
+        }
+    }
+    if (project.name != "app") {
+        afterEvaluate {
+            val android = project.extensions.findByName("android")
+            if (android is com.android.build.gradle.BaseExtension) {
+                android.compileSdkVersion(35)
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

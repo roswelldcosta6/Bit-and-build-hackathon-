@@ -18,12 +18,10 @@ class TfliteService {
   // Sliding window: collect 30 frames, then run inference on every new frame.
   static const int _windowSize = 30;
   static const int _keypointSize = 63; // 21 landmarks x 3 coords
-  static const double _confidenceThreshold = 0.45;
-  static const int _stabilityWindow = 5; // stable for N consecutive runs
+  static const int _stabilityWindow = 2; // stable for 2 consecutive runs
 
   final List<List<double>> _frameBuffer = [];
   final List<String> _recentPredictions = [];
-  SignResult? _lastEmittedResult;
 
   bool get isLoaded => _isLoaded;
 
@@ -31,10 +29,32 @@ class TfliteService {
   Future<void> loadModel() async {
     if (_isLoaded) return;
     try {
-      _interpreter = await Interpreter.fromAsset(
-        'assets/model.tflite',
-        options: InterpreterOptions()..threads = 2,
-      );
+      try {
+        final ByteData modelByteData = await rootBundle.load('assets/model.tflite');
+        final Uint8List modelBytes = modelByteData.buffer.asUint8List(
+          modelByteData.offsetInBytes,
+          modelByteData.lengthInBytes,
+        );
+
+        _interpreter = Interpreter.fromBuffer(
+          modelBytes,
+          options: InterpreterOptions()..threads = 2,
+        );
+      } catch (e1) {
+        debugPrint('Interpreter.fromBuffer failed: $e1. Trying Interpreter.fromAsset(assets/model.tflite)...');
+        try {
+          _interpreter = await Interpreter.fromAsset(
+            'assets/model.tflite',
+            options: InterpreterOptions()..threads = 2,
+          );
+        } catch (e2) {
+          debugPrint('Interpreter.fromAsset(assets/model.tflite) failed: $e2. Trying Interpreter.fromAsset(model.tflite)...');
+          _interpreter = await Interpreter.fromAsset(
+            'model.tflite',
+            options: InterpreterOptions()..threads = 2,
+          );
+        }
+      }
 
       final labelsJson = await rootBundle.loadString(
         'assets/labels_bilingual.json',
@@ -65,12 +85,10 @@ class TfliteService {
     }
   }
 
-  /// Add one frame's 63 keypoints to the sliding window. Returns a stable
-  /// [SignResult] when the model has produced a consistent prediction,
-  /// otherwise null.
+  /// Add one frame's 63 keypoints to the sliding window. Returns the live
+  /// [SignResult] for real-time visual feedback, and marks [isStable] when consistent.
   SignResult? addFrame(List<double> keypoints) {
     if (keypoints.length != _keypointSize) {
-      debugPrint('Expected $_keypointSize keypoints, got ${keypoints.length}');
       return null;
     }
 
@@ -78,7 +96,8 @@ class TfliteService {
     if (_frameBuffer.length > _windowSize) {
       _frameBuffer.removeAt(0);
     }
-    if (_frameBuffer.length < _windowSize) return null;
+    // Need at least 2 frames to begin inference (ultra-sensitive instant feedback)
+    if (_frameBuffer.length < 2) return null;
 
     return _runInference();
   }
@@ -88,7 +107,11 @@ class TfliteService {
     if (interpreter == null) return null;
 
     try {
-      final input = [_frameBuffer.map((f) => f.toList()).toList()];
+      final List<List<double>> modelFrames = List.from(_frameBuffer);
+      while (modelFrames.length < _windowSize) {
+        modelFrames.insert(0, modelFrames.first);
+      }
+      final input = [modelFrames.sublist(modelFrames.length - _windowSize).map((f) => f.toList()).toList()];
       final numLabels = interpreter.getOutputTensor(0).shape.last;
       final output = [List<double>.filled(numLabels, 0.0)];
 
@@ -98,15 +121,15 @@ class TfliteService {
       final maxIndex = scores.indexOf(scores.reduce(math.max));
       final confidence = scores[maxIndex];
 
-      if (confidence < _confidenceThreshold) return null;
       if (maxIndex >= _labels.length) return null;
 
       final labelData = _labels[maxIndex];
+
       final result = SignResult(
         labelEn: labelData['en'] ?? maxIndex.toString(),
         labelHi: labelData['hi'] ?? maxIndex.toString(),
         gloss: maxIndex.toString(),
-        confidence: confidence,
+        confidence: confidence.clamp(0.10, 0.99),
       );
 
       return _debounceResult(result);
@@ -116,30 +139,22 @@ class TfliteService {
     }
   }
 
-  /// Only emit when the same sign wins [stabilityWindow] consecutive runs and
-  /// differs from the last emitted sign.
   SignResult? _debounceResult(SignResult result) {
     _recentPredictions.add(result.gloss);
     if (_recentPredictions.length > _stabilityWindow) {
       _recentPredictions.removeAt(0);
     }
 
-    if (_recentPredictions.length >= _stabilityWindow &&
-        _recentPredictions.every((p) => p == result.gloss)) {
-      if (_lastEmittedResult?.gloss != result.gloss) {
-        _lastEmittedResult = result;
-        _recentPredictions.clear();
-        return result.copyWith(isStable: true);
-      }
-    }
-    return null;
+    final isStable = _recentPredictions.length >= _stabilityWindow &&
+        _recentPredictions.every((p) => p == result.gloss);
+
+    return result.copyWith(isStable: isStable);
   }
 
   /// Reset the sliding window and debounce state (e.g. on clear).
   void clearBuffer() {
     _frameBuffer.clear();
     _recentPredictions.clear();
-    _lastEmittedResult = null;
   }
 
   void dispose() {

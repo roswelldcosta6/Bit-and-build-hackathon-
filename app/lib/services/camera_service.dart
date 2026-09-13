@@ -1,7 +1,6 @@
-import 'dart:ui';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -106,12 +105,15 @@ class CameraService {
         pose.landmarks[PoseLandmarkType.rightKnee],
       ];
 
+      final imgW = image.width > 0 ? image.width.toDouble() : 1.0;
+      final imgH = image.height > 0 ? image.height.toDouble() : 1.0;
+
       for (final landmark in landmarks) {
         if (landmark != null) {
           keypoints.addAll([
-            landmark.x.clamp(0.0, 1.0),
-            landmark.y.clamp(0.0, 1.0),
-            landmark.z.clamp(-1.0, 1.0),
+            (landmark.x / imgW).clamp(0.0, 1.0),
+            (landmark.y / imgH).clamp(0.0, 1.0),
+            (landmark.z / imgW).clamp(-1.0, 1.0),
           ]);
         } else {
           keypoints.addAll([0.0, 0.0, 0.0]);
@@ -148,14 +150,19 @@ class CameraService {
         return null;
       }
 
-      final plane = image.planes.first;
+      final WriteBuffer allBytes = WriteBuffer();
+      for (final Plane plane in image.planes) {
+        allBytes.putUint8List(plane.bytes);
+      }
+      final bytes = allBytes.done().buffer.asUint8List();
+
       return InputImage.fromBytes(
-        bytes: plane.bytes,
+        bytes: bytes,
         metadata: InputImageMetadata(
           size: Size(image.width.toDouble(), image.height.toDouble()),
           rotation: rotation,
           format: format,
-          bytesPerRow: plane.bytesPerRow,
+          bytesPerRow: image.planes.first.bytesPerRow,
         ),
       );
     } catch (e) {
