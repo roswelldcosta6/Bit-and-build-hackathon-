@@ -179,6 +179,95 @@ class SettingsScreen extends ConsumerWidget {
           const Text(
             'Android emulator uses 10.0.2.2 to reach the local FastAPI server.',
           ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Edit API base URL',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: settings.apiBaseUrl,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          hintText: 'http://host-ip:8000',
+                          border: OutlineInputBorder(),
+                        ),
+                        onSaved: (value) {
+                          if (value != null && value.isNotEmpty) {
+                            notifier.update(settings.copyWith(apiBaseUrl: value));
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () async {
+                        final controller = TextEditingController(
+                          text: settings.apiBaseUrl,
+                        );
+                        final result = await showDialog<String>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Update API base URL'),
+                            content: SizedBox(
+                              width: 380,
+                              child: TextFormField(
+                                controller: controller,
+                                decoration: const InputDecoration(
+                                  hintText: 'http://host-ip:8000',
+                                  border: OutlineInputBorder(),
+                                ),
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                validator: (v) =>
+                                    v == null || v.isEmpty
+                                        ? 'Enter a URL'
+                                        : v.startsWith('http')
+                                                ? null
+                                                : 'Must start with http:// or https://',
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(ctx, controller.text),
+                                child: const Text('Save'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (result != null) {
+                          notifier.update(settings.copyWith(apiBaseUrl: result));
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('API base URL updated to $result'),
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

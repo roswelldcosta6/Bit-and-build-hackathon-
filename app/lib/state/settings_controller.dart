@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum SpeechLanguage { english, hindi, both }
@@ -10,7 +9,7 @@ class AppSettings {
     this.speechLanguage = SpeechLanguage.both,
     String? apiBaseUrl,
   }) : apiBaseUrl =
-           apiBaseUrl ?? (kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000');
+           apiBaseUrl ?? 'http://host.docker.internal:8000';
   final bool darkMode;
   final double fontScale;
   final SpeechLanguage speechLanguage;
