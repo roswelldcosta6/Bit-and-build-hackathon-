@@ -206,8 +206,7 @@ SignBridge/
 
 ## 📥 Installation
 
-> [!NOTE]
-> Setup instructions and download link coming soon.
+Application download link android: https://drive.google.com/drive/folders/1PcFBYOAKFPHKPAVb3zct736NqU69FBtf
 
 ---
 
