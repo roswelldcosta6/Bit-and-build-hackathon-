@@ -15,11 +15,12 @@ class TfliteService {
   List<Map<String, String>> _labels = const [];
   bool _isLoaded = false;
 
-  // Sliding window: collect 30 frames, then run inference on every new frame.
+  // Sliding window: collect 30 frames, then run inference over buffered keypoints.
   static const int _windowSize = 30;
   static const int _keypointSize = 63; // 21 landmarks x 3 coords
-  static const double _confidenceThreshold = 0.08;
-  static const int _stabilityWindow = 2; // stable for 2 consecutive runs
+  static const double _confidenceThreshold = 0.35; // Filter low confidence noise (prevents 20% random triggers)
+  static const double _stableConfidenceThreshold = 0.50; // Threshold to lock in sign
+  static const int _stabilityWindow = 4; // Stable across recent window
 
   final List<List<double>> _frameBuffer = [];
   final List<String> _recentPredictions = [];
@@ -61,16 +62,16 @@ class TfliteService {
         'assets/labels_bilingual.json',
       );
       final Map<String, dynamic> rawLabels = json.decode(labelsJson);
-      // Keys are the class indices as strings ("0".."162"); keep them ordered
-      // so inference output index i maps to class i.
-      final entries =
-          rawLabels.entries.toList()..sort((a, b) {
-            final ai = int.tryParse(a.key) ?? 0;
-            final bi = int.tryParse(b.key) ?? 0;
-            return ai.compareTo(bi);
-          });
-      _labels = entries
-          .map((e) => Map<String, String>.from(e.value as Map))
+      // Preserve exact JSON key insertion order which matches the 163 model output classes
+      _labels = rawLabels.entries
+          .map((e) {
+            final val = e.value as Map<String, dynamic>;
+            return {
+              'key': e.key,
+              'en': val['en']?.toString() ?? e.key,
+              'hi': val['hi']?.toString() ?? e.key,
+            };
+          })
           .toList();
 
       _isLoaded = true;
@@ -97,8 +98,8 @@ class TfliteService {
     if (_frameBuffer.length > _windowSize) {
       _frameBuffer.removeAt(0);
     }
-    // Need at least 2 frames to begin inference (ultra-sensitive instant feedback)
-    if (_frameBuffer.length < 2) return null;
+    // Need at least 6 frames before evaluating sequence
+    if (_frameBuffer.length < 6) return null;
 
     return _runInference();
   }
@@ -122,15 +123,20 @@ class TfliteService {
       final maxIndex = scores.indexOf(scores.reduce(math.max));
       final confidence = scores[maxIndex];
 
+      // Ignore low confidence noise
+      if (confidence < _confidenceThreshold) return null;
       if (maxIndex >= _labels.length) return null;
 
       final labelData = _labels[maxIndex];
+      final labelEn = labelData['en'] ?? maxIndex.toString();
+      final labelHi = labelData['hi'] ?? maxIndex.toString();
+      final gloss = labelData['key'] ?? labelEn.toUpperCase().replaceAll(' ', '_');
 
       final result = SignResult(
-        labelEn: labelData['en'] ?? maxIndex.toString(),
-        labelHi: labelData['hi'] ?? maxIndex.toString(),
-        gloss: maxIndex.toString(),
-        confidence: confidence.clamp(0.10, 0.99),
+        labelEn: labelEn,
+        labelHi: labelHi,
+        gloss: gloss,
+        confidence: confidence.clamp(0.0, 1.0),
       );
 
       return _debounceResult(result);
@@ -146,8 +152,11 @@ class TfliteService {
       _recentPredictions.removeAt(0);
     }
 
-    final isStable = _recentPredictions.length >= _stabilityWindow &&
-        _recentPredictions.every((p) => p == result.gloss);
+    // A sign is stable if confidence is high and it dominates the recent window
+    final matchCount = _recentPredictions.where((p) => p == result.gloss).length;
+    final isStable = result.confidence >= _stableConfidenceThreshold &&
+        _recentPredictions.length >= _stabilityWindow &&
+        matchCount >= (_stabilityWindow - 1);
 
     return result.copyWith(isStable: isStable);
   }

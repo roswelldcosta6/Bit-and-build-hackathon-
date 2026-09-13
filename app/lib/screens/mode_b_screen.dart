@@ -23,7 +23,9 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
   bool _speechInitialized = false;
   bool _userWantsMic = false;
   bool _listening = false;
-  String _speechLocale = "en-IN"; // "en-IN" for Indian English / Hinglish, "hi-IN" for Hindi
+  // On Android, en-US is the most widely available offline locale. We try en-IN first,
+  // but fall back to en-US on network/locale errors (handled in _onSpeechError).
+  String _speechLocale = kIsWeb ? "en-IN" : "en-US";
   bool _submitting = false;
   String? _error;
 
@@ -221,9 +223,11 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
         _speechInitialized = await _speech.initialize(
           onStatus: _onSpeechStatus,
           onError: _onSpeechError,
+          debugLogging: false,
         );
       } catch (e) {
         _speechInitialized = false;
+        debugPrint('SpeechToText initialize error: $e');
       }
     }
 
@@ -232,7 +236,9 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
       if (mounted) {
         setState(() {
           _listening = false;
-          _error = "Microphone access not available. Please allow mic permissions in browser settings.";
+          _error = kIsWeb
+              ? "Microphone access not available. Please allow mic permissions in your browser settings."
+              : "Speech recognition unavailable. Ensure Google app is installed and up-to-date, or check microphone permissions in Settings.";
         });
       }
       return;
@@ -295,8 +301,8 @@ class _ModeBScreenState extends ConsumerState<ModeBScreen> {
     // User requested to remove network error - suppress network, no-speech, and aborted
     if (msg.contains("network") || msg.contains("no-speech") || msg.contains("aborted")) {
       if (_userWantsMic && mounted) {
-        if (_speechLocale == "en-IN" && msg.contains("network")) {
-          // If en-IN had cloud lookup glitch on Edge, seamlessly try en-US
+        // Silently fall back: en-IN → en-US for both web (cloud) and Android (offline)
+        if (msg.contains("network") || msg.contains("language") || msg.contains("locale")) {
           _speechLocale = "en-US";
         }
         Future.delayed(const Duration(milliseconds: 400), () {

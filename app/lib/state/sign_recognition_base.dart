@@ -16,6 +16,12 @@ abstract base class SignRecognitionNotifierBase
   /// Clear the accumulated sentence and recognition window.
   void clearSentence();
 
+  /// Speak the current recognition or accumulated sentence aloud via TTS.
+  Future<void> speakCurrentOrSentence();
+
+  /// Toggle between front and back camera. No-op on platforms without camera.
+  Future<void> switchCamera();
+
   /// Native camera controller when the camera is running; null otherwise.
   Object? get cameraController;
 

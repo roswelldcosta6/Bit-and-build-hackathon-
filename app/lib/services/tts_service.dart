@@ -17,18 +17,23 @@ class TtsService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    await _tts.setVolume(1.0);
-    await _tts.setSpeechRate(0.45); // slightly slower for clarity
-    await _tts.setPitch(1.0);
+    try {
+      await _tts.setVolume(1.0);
+      await _tts.setSpeechRate(0.5); // Natural conversational rate
+      await _tts.setPitch(1.0);
+      await _tts.awaitSpeakCompletion(true); // Crucial: wait for speech to finish!
 
-    _tts.setStartHandler(() => _isSpeaking = true);
-    _tts.setCompletionHandler(() => _isSpeaking = false);
-    _tts.setErrorHandler((msg) {
-      debugPrint('TTS error: $msg');
-      _isSpeaking = false;
-    });
+      _tts.setStartHandler(() => _isSpeaking = true);
+      _tts.setCompletionHandler(() => _isSpeaking = false);
+      _tts.setErrorHandler((msg) {
+        debugPrint('TTS error: $msg');
+        _isSpeaking = false;
+      });
 
-    _isInitialized = true;
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('TTS initialization error: $e');
+    }
   }
 
   /// Set the TTS language preference: 'en', 'hi', or 'both'.
@@ -37,7 +42,7 @@ class TtsService {
     _selectedLanguage = language;
   }
 
-  /// Speak the recognized sign in the configured language(s).
+  /// Speak the recognized sign or accumulated sentence in the configured language(s).
   Future<void> speakSign({
     required String textEn,
     required String textHi,
@@ -45,23 +50,50 @@ class TtsService {
     if (!_isInitialized) await initialize();
     await stop();
 
+    final en = textEn.trim();
+    final hi = textHi.trim();
+
     switch (_selectedLanguage) {
       case 'en':
-        await _speakInLanguage(textEn, 'en-IN');
+        if (en.isNotEmpty) await _speakInLanguage(en, 'en-IN');
       case 'hi':
-        await _speakInLanguage(textHi, 'hi-IN');
+        if (hi.isNotEmpty) {
+          await _speakInLanguage(hi, 'hi-IN');
+        } else if (en.isNotEmpty) {
+          await _speakInLanguage(en, 'en-IN');
+        }
       case 'both':
-        await _speakInLanguage(textEn, 'en-IN');
-        await _speakInLanguage(textHi, 'hi-IN');
+        if (en.isNotEmpty) {
+          await _speakInLanguage(en, 'en-IN');
+        }
+        if (hi.isNotEmpty) {
+          await Future.delayed(const Duration(milliseconds: 250));
+          await _speakInLanguage(hi, 'hi-IN');
+        }
     }
   }
 
   Future<void> _speakInLanguage(String text, String languageCode) async {
     try {
-      await _tts.setLanguage(languageCode);
+      // Check language availability with fallback
+      dynamic isAvailable = false;
+      try {
+        isAvailable = await _tts.isLanguageAvailable(languageCode);
+      } catch (_) {}
+
+      final effectiveLang = (isAvailable == true || isAvailable == 1)
+          ? languageCode
+          : (languageCode.startsWith('hi') ? 'hi' : 'en-US');
+
+      await _tts.setLanguage(effectiveLang);
       await _tts.speak(text);
     } catch (e) {
       debugPrint('TTS speak error ($languageCode): $e');
+      // Fallback attempt with default language
+      try {
+        await _tts.setLanguage('en-US');
+        await _tts.speak(text);
+      } catch (_) {}
     }
   }
 
